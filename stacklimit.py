@@ -1,6 +1,6 @@
 #!/bin/python3
 """
-Determine the maximum stack size of a C program.
+Determines the maximum stack size of a binary program using the ELF format.
 
 @author Mortiz Lüdecke (CETITEC)
 """
@@ -650,6 +650,7 @@ class Stacklimit:
     def get_stack_limit(self):
         return self.stacktable.limit()
 
+    # TODO: Print also '>' for imprecise functions
     def print_stack_table(self, header=False):
         # Should never happen
         if not self.stacktable:
