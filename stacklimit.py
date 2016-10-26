@@ -709,7 +709,7 @@ class Stacklimit:
 
         address_len = int(log(address_len, 16).real + 3)
         size_len = int(log(size_len, 10).real + 1)
-        total_len = int(log(total_len, 10).real + 1)
+        total_len = int(log(total_len, 10).real + 1) + 1
 
         if header:
             print('{:>{}} {:<{}}  {:<{}}  {:>{}} {:>{}}'.format('address',  address_len,
@@ -727,7 +727,12 @@ class Stacklimit:
                 file = function.file if function.file else ''
                 file = self._dark('{:{width}}'.format(file, width=file_len))
                 size = '{:{width}}'.format(function.size, width=size_len)
-                total = self._bold('{:{width}}'.format(function.total, width=total_len))
+                # Workaround for text with color
+                total = self._bold(str(function.total))
+                imprecise = '>' if function.imprecise else ' '
+                total_prefix_len = total_len - int(log(function.total + 1, 10).real) - 1
+                total = '{:>{width}}{}'.format(imprecise, total, width=total_prefix_len)
+
                 print('{} {}  {}  {} {}'.format(address, name, file, size, total))
 
     def print_call_tree(self):
