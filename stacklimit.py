@@ -7,13 +7,14 @@ Determines the maximum stack size of a binary program using the ELF format.
 
 import argparse
 from cmath import log
-import os
+from os import listdir, environ
+from os.path import isfile
 import re
 import subprocess
 
-PATH = ['.'] + os.environ["PATH"].split(':')
+PATH = [path + '/' for path in ['.'] + environ["PATH"].split(':')]
 ARCHITECTURES = [
-    # TODO: 'arm64',
+    # TODO: 'arm', 'aarch64',
     'x86', 'i386', 'i486', 'i586', 'i686',
     'x86_64',
 ]
@@ -32,15 +33,6 @@ OS_FUNCTIONS = [
     '__do_global_dtors_aux_fini_array_entry',
     '__frame_dummy_init_array_entry',
 ]
-
-
-def get_tool_path(tool):
-    for dir in PATH:
-        path = dir + '/' + tool
-        if os.path.isfile(path):
-            return path
-
-    return None
 
 
 def get_arch(arch):
@@ -241,15 +233,14 @@ class Stacklimit:
 
     regard_os_functions = None
 
-    tools = {
-        'objdump':       None,
-        'readelf':       None,
-    }
+    readelf_path = None
+    # TODO: Add support for llvm-objdump
+    objdump_path = None
 
     stacktable = None
 
     def __init__(self, debug=False, warn=True, quiet=False, color=False, multiple_warn=True, regard_os_functions=True,
-                 arch=None, binary=None, objdump=None):
+                 arch=None, objdump=None, binary=None):
         self.debug = debug
         self.color = color
         self.quiet = quiet
@@ -261,17 +252,11 @@ class Stacklimit:
         self.regard_os_functions = regard_os_functions
         self.stacktable = Stack.Table([Stack.Function(address=0, name='Function Pointer')])
 
-        # TODO: Specific objdump for local installs or objdump for other platforms...
+        self.readelf_path = self._get_tool_path('readelf')
+        self._init_arch(arch, binary)
+        self._init_objdump(binary, objdump)
 
-        for tool in self.tools:
-            self.tools[tool] = get_tool_path(tool)
-
-            if self.tools[tool] is None:
-                self._print(Message.ERROR, 'Couldn\'t find \'' + tool + '\'')
-                raise ValueError()
-
-            self._print(Message.DEBUG, '\'' + self._bold(tool) + '\' located in \'' + self._bold(self.tools[tool]) + '\'')
-
+    def _init_arch(self, arch, binary):
         if not arch:
             self._print(Message.DEBUG, 'Determinate platform from binary...')
             arch = self._get_arch(binary)
@@ -293,13 +278,24 @@ class Stacklimit:
         self._print(Message.DEBUG, 'Using architecture ' + self._bold(arch))
         self.arch = arch
 
-        self._print(Message.DEBUG, 'Determinate objdump support for architecture ' + self._bold(arch) + '...')
+    def _init_objdump(self, binary, objdump=None):
+        self._print(Message.DEBUG, 'Determinate objdump support for architecture ' + self._bold(self.arch) + '...')
 
-        if not self._has_objdmup_support(binary):
-            self._print(Message.ERROR, 'Your objdump doesn\'t support the architecture ' + self._bold(arch) + '.\n'
-                                       'Use \'' + self._bold('-o') + '\' or \'' + self._bold('--objdump') + '\''
-                                       'to specify the objdump binary.')
+        if objdump:
+            self.objdump_path = self._get_tool_path(objdump)
+            supported = self._has_objdmup_support(binary)
+        else:
+            supported = self._find_objdump(binary)
+
+        if not supported:
+            self._print(Message.ERROR,
+                        'Your objdump doesn\'t support the architecture ' + self._bold(self.arch) + '.')
+            if not objdump:
+                self._print(Message.ERROR, 'Use \'' + self._bold('-o') + '\' or \'' + self._bold('--objdump') + '\''
+                                           'to specify the objdump binary.', prefix='')
             raise ValueError()
+
+        self._print(Message.DEBUG, 'Using \'' + self._bold(self.objdump_path) + '\'')
 
     def _bold(self, msg):
         if self.color:
@@ -319,11 +315,35 @@ class Stacklimit:
         else:
             return msg
 
+    def _find_objdump(self, binary):
+        objdumps = [dir + file for dir in PATH for file in listdir(dir) if file.endswith('objdump')]
+
+        self._print(Message.DEBUG, 'Search compatible objdump...')
+
+        for objdump in objdumps:
+            cmd = [objdump, '--version']
+            output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                                      ).communicate()[0].decode('utf-8')
+
+            if output == '':
+                self._print(Message.DEBUG, 'Couldn\'t get version from \'' + self._bold(objdump) + '\'.')
+                continue
+
+            origin = output.split(' ')[0]
+            # Add support for llvm-objdump
+            if origin == 'GNU' and self._has_objdmup_support(binary, objdump):
+                self.objdump_path = objdump
+                return True
+
+            self._print(Message.DEBUG, '\'' + self._bold(objdump) + '\' doesn\'t support arch.')
+
+        return False
+
     def _get_arch(self, binary):
         if not binary:
             return None
 
-        cmd = [self.tools['readelf'], '-h', binary]
+        cmd = [self.readelf_path, '-h', binary]
         output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 
         if output == '':
@@ -343,25 +363,26 @@ class Stacklimit:
 
         return get_arch(output)
 
-    def _has_objdmup_support(self, binary):
+    def _get_tool_path(self, tool):
+        for dir in [''] + PATH:
+            path = dir + tool
+            if isfile(path):
+                return path
+
+        self._print(Message.ERROR, 'Couldn\'t find \'' + self._bold(tool) + '\'')
+        raise ValueError()
+
+    def _has_objdmup_support(self, binary, objdump=None):
         if not binary:
             return False
 
-        cmd = [self.tools['objdump'], '-f', binary]
-        output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-        output_array = output.split('architecture:')
+        if not objdump:
+            objdump = self.objdump_path
 
-        if len(output_array) < 2:
-            self._print(Message.DEBUG, 'Couldn\'t find \'' + self._bold('architecture') + '\' in output of objdump. '
-                                       'Maybe the syntax has changed.')
-            return False
+        cmd = [objdump, '-d', '--stop-address=0', binary]
+        returncode = subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        output = output_array[1]
-        output = output.split(', ')[0]
-        output = output.split(':')[-1]
-        arch = get_arch(output)
-
-        return arch is not None
+        return returncode == 0
 
     def _print(self, kind, *objects, sep=' ', end='\n', prefix=True):
         if kind is Message.DEBUG:
@@ -551,7 +572,7 @@ class Stacklimit:
         current = None
         file = None
 
-        objdump_cmd = [self.tools['objdump'], '-d', binary]
+        objdump_cmd = [self.objdump_path, '-d', binary]
         objdump = subprocess.Popen(objdump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         for line in objdump.stdout:
@@ -719,9 +740,8 @@ def main():
                         help='suppress color')
     parser.add_argument('--header', action='store_true',
                         help='show header line')
-    # TODO: Specific objdump for local installs or objdump for other platforms...
-    # parser.add_argument('-o', '--objdump',
-    #                     help='path to or name of the objdump')
+    parser.add_argument('-o', '--objdump',
+                        help='path to or name of the objdump')
     parser.add_argument('-r', '--regard-all', action='store_true',
                         help='regard initialization and termination code')
     parser.add_argument('-s', '--summary', action='store_true',
@@ -743,10 +763,10 @@ def main():
     warn = not args.no_warnings
     mult_warn = not args.no_duplicated_warnings
     color = not args.no_color
-    
+
     try:
         sl = Stacklimit(args.debug, warn, args.quiet, color, mult_warn, args.regard_all,
-                        args.arch, args.binary.name)
+                        args.arch, args.objdump, args.binary.name)
     except ValueError:
         exit(1)
 

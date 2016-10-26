@@ -35,5 +35,5 @@ Requirements
 ------------
 
 * **objdump** (gcc)
-* **elfread**
+* **readelf**
 
