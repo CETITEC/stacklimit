@@ -75,6 +75,47 @@ class Message:
     WARN = MessageType('Warning: ', Color.PURPLE)
 
 
+class Pattern:
+    # Binary file and architecture, e.g.
+    #
+    # dir/binary:     file format elf64-x86-64
+    FileFormat = '^.*:( |\t)*file format '
+
+    # New functions, e.g.
+    #
+    # 000000000040076d <main>:
+    Function = '^[0-9a-f]* \<.*\>:$'
+
+    # Function call, e.g.
+    #
+    #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
+    FunctionCall = '^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  [0-9a-f]+ \<.*\>$'
+
+    # Function pointer call, e.g.
+    #
+    #   400804:   ff d0                   callq  *%rax
+    FunctionPointer = '^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  .*%.*$'
+
+    # Dynamic stack operations, e.g.
+    #
+    #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
+    #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
+    StackDynamicOp = '.*sub( |\t)+\%.*,\%(e|r)sp$'
+
+    # Push stack operations, e.g.
+    #
+    #   4004c3:   55                      push   %esp
+    #   4004c3:   55                      push   %rsp
+    StackPushOp = '.*(push)( |\t)+\%(e|r)sp$'
+
+    # Static stack operations, e.g.
+    #
+    #  (4003e5:   55                      push   %rbp)
+    #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
+    # Note: We ignore all 'add' operations. We only interested in 'sub'.
+    StackSubOp = '.*sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$'
+
+
 class Visitor:
     callstack = []
     queue = []
@@ -578,19 +619,13 @@ class Stacklimit:
         for line in objdump.stdout:
             line = line.decode('utf-8')[:-1]
 
-            # Binary file and architecture, e.g.
-            #
-            # dir/binary:     file format elf64-x86-64
-            if re.match('^.*:( |\t)*file format ', line):
+            if re.match(Pattern.FileFormat, line):
                 line_array = line.split(' ')
                 arch = line_array[-1]
                 path = line_array[0][:-1]
                 file = path.split('/')[-1]
 
-            # New functions, e.g.
-            #
-            # 000000000040076d <main>:
-            elif re.match('^[0-9a-f]* \<.*\>:$', line):
+            elif re.match(Pattern.Function, line):
                 line_array = line.split(' ')
                 address = int(line_array[0], 16)
                 name = line_array[1][1:-2]
@@ -602,11 +637,7 @@ class Stacklimit:
                 else:
                     current = self.stacktable.append(Stack.Function(address=address, name=name, file=file))
 
-            # Push stack operations, e.g.
-            #
-            #   4004c3:   55                      push   %esp
-            #   4004c3:   55                      push   %rsp
-            elif re.match('.*(push)( |\t)+\%(e|r)sp$', line):
+            elif re.match(Pattern.StackPushOp, line):
                 register = line[-3]
 
                 # 32 bit register
@@ -616,12 +647,7 @@ class Stacklimit:
                 elif register == 'r':
                     current.size += 8
 
-            # Static stack operations, e.g.
-            #
-            #  (4003e5:   55                      push   %rbp)
-            #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
-            # Note: We ignore all 'add' operations. We only interested in 'sub'.
-            elif re.match('.*sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$', line):
+            elif re.match(Pattern.StackSubOp, line):
                 temp = line.split(' ')[-1]
                 temp = temp.split(',')[0][1:]
                 size = int(temp, 16)
@@ -636,17 +662,10 @@ class Stacklimit:
 
                 current.size += size
 
-            # Dynamic stack operations, e.g.
-            #
-            #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
-            #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
-            elif re.match('.*sub( |\t)+\%.*,\%(e|r)sp$', line):
+            elif re.match(Pattern.StackDynamicOp, line):
                 current.dynamic = True
 
-            # Function call, e.g.
-            #
-            #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
-            elif re.match('^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  [0-9a-f]+ \<.*\>$', line):
+            elif re.match(Pattern.FunctionCall, line):
                 line_array = line.split(' ')
                 address = int(line_array[-2], 16)
                 name = line_array[-1][1:-1]
@@ -660,10 +679,7 @@ class Stacklimit:
                     current.calls.append(function)
                     function.returns.append(current)
 
-            # Function pointer call, e.g.
-            #
-            #   400804:   ff d0                   callq  *%rax
-            elif re.match('^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  .*%.*$', line):
+            elif re.match(Pattern.FunctionPointer, line):
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
