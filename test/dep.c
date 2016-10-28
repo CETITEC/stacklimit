@@ -1,14 +1,14 @@
-// local size 0
+// local size 0 + 4/8 (32bit/64bit)
 long func_omega(void) {
 	return 0;
 }
 
-// local size 0
+// local size 0 + 4/8 (32bit/64bit)
 long func_alpha(long a) {
 	return a + 1;
 }
 
-// local size 32
+// local size 32 + 4/8 (32bit/64bit)
 long func_beta(long a, long b) {
 	long tmp = a + b;
 
@@ -17,7 +17,7 @@ long func_beta(long a, long b) {
 	return tmp;
 }
 
-// local size 40
+// local size 40 + 4/8 (32bit/64bit)
 long func_gamma(long a, long b, long c) {
 	long tmp = 0;
 
@@ -27,7 +27,7 @@ long func_gamma(long a, long b, long c) {
 	return tmp + a + b + c;
 }
 
-// local size 48
+// local size 48 + 4/8 (32bit/64bit)
 long func_delta(long a, long b, long c, long d) {
 	long tmp = 0;
 
@@ -38,7 +38,7 @@ long func_delta(long a, long b, long c, long d) {
 	return tmp + a + b + c + d;
 }
 
-// local size 56
+// local size 56 + 4/8 (32bit/64bit)
 long func_epsilon(long a, long b, long c, long d, long e) {
 	long tmp = 0;
 
@@ -50,7 +50,7 @@ long func_epsilon(long a, long b, long c, long d, long e) {
 	return tmp + a + b + c + d + e;
 }
 
-// local size 64
+// local size 64 + 4/8 (32bit/64bit)
 long func_zeta(long a, long b, long c, long d, long e, long f) {
 	long tmp = 0;
 	long temp = 0;
@@ -64,7 +64,7 @@ long func_zeta(long a, long b, long c, long d, long e, long f) {
 	return tmp + temp + a + b + c + d + e + f;
 }
 
-// local size 16
+// local size 16 + 4/8 (32bit/64bit)
 long rec_xi(long a) {
 	if (a < 10) {
 		a++;
@@ -75,7 +75,7 @@ long rec_xi(long a) {
 
 long rec_psi(long a);
 
-// local size 16
+// local size 16 + 4/8 (32bit/64bit)
 long rec_phi(long a) {
 	if (a < 10) {
 		return rec_psi(a + 1);
@@ -84,17 +84,17 @@ long rec_phi(long a) {
 	return a;
 }
 
-// local size 16
+// local size 16 + 4/8 (32bit/64bit)
 long rec_chi(long a) {
 	return rec_phi(a + 1);
 }
 
-// local size 16
+// local size 16 + 4/8 (32bit/64bit)
 long rec_psi(long a) {
 	return rec_chi(a + 1);
 }
 
-// local size 32
+// local size 32 + 4/8 (32bit/64bit)
 long main(long argc, long** argv) {
 	long a;
 	long (*fp)(long a);
