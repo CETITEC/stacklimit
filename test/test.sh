@@ -1,10 +1,11 @@
 #!/bin/bash
 
-STACKLIMIT="../stacklimit.py"
-TEST_X86="dep-x86"
-TEST_X86_64="dep-x86_64"
-TEST_ARM="dep-arm"
-TEST_AARCH64="dep-aarch64"
+DIR="$(dirname "$PWD/$0")"
+STACKLIMIT="$DIR/../stacklimit.py"
+TEST_X86="$DIR/dep-x86"
+TEST_X86_64="$DIR/dep-x86_64"
+TEST_ARM="$DIR/dep-arm"
+TEST_AARCH64="$DIR/dep-aarch64"
 
 #SIZE_X86=0
 SIZE_X86_64=336
