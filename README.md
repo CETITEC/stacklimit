@@ -27,6 +27,8 @@ Features
 Supported Architectures
 -----------------------
 
+* `arm`
+* `aarch64`
 * `x86`
 * `x86_64`
 

@@ -13,26 +13,7 @@ import re
 import subprocess
 
 PATH = [path + '/' for path in ['.'] + environ["PATH"].split(':')]
-ARCHITECTURES = [
-    # TODO: 'arm', 'aarch64',
-    'x86', 'i386', 'i486', 'i586', 'i686',
-    'x86_64',
-]
-OS_FUNCTIONS = [
-    'register_tm_clones',
-    'deregister_tm_clones',
-    'frame_dummy',
-    '_init',
-    '_start',
-    '_fini',
-    '__libc_csu_init',
-    '__libc_csu_fini',
-    '__init_array_start',
-    '__init_array_end',
-    '__do_global_dtors_aux',
-    '__do_global_dtors_aux_fini_array_entry',
-    '__frame_dummy_init_array_entry',
-]
+MAX_NAME_LEN=64
 
 
 def get_arch(arch):
@@ -41,8 +22,15 @@ def get_arch(arch):
 
     arch = arch.lower().replace('-', '_')
 
-    if arch in ARCHITECTURES:
-        return arch
+    for supported_arch in Pattern.arch:
+        if arch == supported_arch:
+            return arch
+
+        # To match also '80386' as x86 architecture
+        if supported_arch[0] == 'x':
+            temp = supported_arch[1:]
+            if temp in arch and temp[-1] == arch[-1]:
+                return supported_arch
 
     return None
 
@@ -76,44 +64,169 @@ class Message:
 
 
 class Pattern:
-    # Binary file and architecture, e.g.
-    #
+    arch = ['arm', 'aarch64',
+            'x86', 'x86_64']
+    os_functions = [
+        'register_tm_clones',
+        'deregister_tm_clones',
+        'frame_dummy',
+        '_init',
+        '_start',
+        '_fini',
+        '__libc_csu_init',
+        '__libc_csu_fini',
+        '__init_array_start',
+        '__init_array_end',
+        '__do_global_dtors_aux',
+        '__do_global_dtors_aux_fini_array_entry',
+        '__frame_dummy_init_array_entry',
+        '__libc_start_main@plt',
+        '__gmon_start__@plt']
+
     # dir/binary:     file format elf64-x86-64
     FileFormat = '^.*:( |\t)*file format '
 
-    # New functions, e.g.
-    #
     # 000000000040076d <main>:
     Function = '^[0-9a-f]* \<.*\>:$'
 
-    # Function call, e.g.
-    #
+    FunctionCall = None
+    FunctionPointer = None
+    StackDynamicOp = None
+    StackPushOp = None
+    StackSubOp = None
+
+    @staticmethod
+    def get_function(line):
+        line_array = line.split(' ')
+        address = int(line_array[0], 16)
+        name = line_array[1][1:-2]
+
+        return address, name
+
+
+class arm(Pattern):
+    arch = ['arm']
+
+    #   1069c:        ebffff80        bl      104a4 <func_alpha>
+    #   10900:        ea000002        b       10910 <main+0x7c>
+    # TODO: Test cbz and cbnz
+    # FIXME: False positive on 10900 => if branch and no function call!
+    FunctionCall = '.*((b|b[a-z]{2}|bl|blx)|(cbz|cbnz)( |\t)+r[0-9]+,)( |\t)+[0-9]+'
+
+    #   1031c:   e12fff13    bx  r3
+    #   10344:   012fff1e    bxeq    lr
+    #   10918:   e12fff33    blx r3
+    # TODO: Test this
+    # FIXME: False positive on 10900 => if branch and no function call!
+    FunctionPointer = '.*(bx|blx)[a-z]{2}( |\t)+[a-z]+$'
+
+    # TODO:
+    StackPushOp = '.*push( |\t)+'
+
+    #   ad5e0a:   b0f8        sub sp, #480    ; 0x1e0
+    #   ad7620:   b093        sub sp, #76 ; 0x4c
+    #   a31760:   e24dd01c    sub sp, sp, #28
+    #   ad6e4e:   f5ad 7d21   sub.w   sp, sp, #644
+    StackSubOp = '.*sub(.w|w|)( |\t)+sp,( |\t)+sp,( |\t)+\#[0-9]+'
+
+    @staticmethod
+    def get_function_call(line):
+        line = line.replace('\t', ' ')
+        line = line.replace('  ', ' ')
+        line_array = line.split(' ')
+        address = int(line_array[-2], 16)
+        name = line_array[-1][1:-1]
+
+        return address, name
+
+    @staticmethod
+    def get_stack_push_size(line):
+        # TODO
+        return 0
+
+    @staticmethod
+    def get_stack_sub_size(line):
+        temp = line.split('#')[-1]
+        temp = temp.split('\n')[0]
+        temp = temp.split('\t')[0]
+        return temp.split(' ')[0]
+
+
+class aarch64(arm):
+    arch = ['aarch64']
+
+    # TODO
+    # TODO: bne.w is also a branch command
+    FunctionPointer = None
+
+    # TODO
+    StackPushOp = '.*push( |\t)+'
+
+    #  4bc:   a9bc7bfd    stp x29, x30, [sp,#-64]!
+    #  894:   a9af7bfd    stp x29, x30, [sp,#-272]!
+    StackSubOp = '.*stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp,\#-[0-9]+\]\!$'
+
+    @staticmethod
+    def get_stack_push_size(line):
+        # TODO
+        return 0
+
+    @staticmethod
+    def get_stack_sub_size(line):
+        temp = line.split('#')[-1]
+        return temp.split(']')[0][1:]
+
+
+class x86(Pattern):
+    arch = ['x86']
+
     #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
     FunctionCall = '^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  [0-9a-f]+ \<.*\>$'
 
-    # Function pointer call, e.g.
-    #
     #   400804:   ff d0                   callq  *%rax
     FunctionPointer = '^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  .*%.*$'
 
-    # Dynamic stack operations, e.g.
-    #
     #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
     #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
     StackDynamicOp = '.*sub( |\t)+\%.*,\%(e|r)sp$'
 
-    # Push stack operations, e.g.
-    #
     #   4004c3:   55                      push   %esp
     #   4004c3:   55                      push   %rsp
-    StackPushOp = '.*(push)( |\t)+\%(e|r)sp$'
+    StackPushOp = '.*push(l|)( |\t)+'
 
-    # Static stack operations, e.g.
-    #
-    #  (4003e5:   55                      push   %rbp)
     #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
-    # Note: We ignore all 'add' operations. We only interested in 'sub'.
     StackSubOp = '.*sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$'
+
+    @staticmethod
+    def get_function_call(line):
+        line = line.replace('\t', ' ')
+        line = line.replace('  ', ' ')
+        line_array = line.split(' ')
+        address = int(line_array[-2], 16)
+        name = line_array[-1][1:-1]
+
+        return address, name
+
+    @staticmethod
+    def get_stack_push_size(line):
+        return 4
+
+    @staticmethod
+    def get_stack_sub_size(line):
+        temp = line.split(' ')[-1]
+        return temp.split(',')[0][1:]
+
+
+class x86_64(x86):
+    arch = ['x86_64']
+
+    #   4004c3:   55                      push   %esp
+    #   4004c3:   55                      pushq  %rbp
+    StackPushOp = '.*push(q|)( |\t)+'
+
+    @staticmethod
+    def get_stack_push_size(line):
+        return 8
 
 
 class Visitor:
@@ -178,9 +291,13 @@ class Stack:
         returns = None
         visited = False
         # lock = False
+        # TODO: Save the section and show only function in .text and which are not in os_functions
+        # section = None
 
         def __init__(self, address=None, name=None, file=None, size=0):
             self.address = address
+            if len(name) > MAX_NAME_LEN:
+                name = name[:MAX_NAME_LEN - 3] + '...'
             self.name = name
             self.file = file
             self.size = size
@@ -219,6 +336,10 @@ class Stack:
         def __contains__(self, item):
             return self.find(item.address)
 
+        def __delitem__(self, key):
+            index = self.table.index(key)
+            del(self.table[index])
+
         def __getitem__(self, item):
             return self.table.__getitem__(item)
 
@@ -241,6 +362,7 @@ class Stack:
             self.table.append(function)
             return function
 
+        # FIXME: This doesn't work for arm, because there are multiple system functions which has the address 0x0
         def find(self, address):
             for function in self.table:
                 if address == function.address:
@@ -308,12 +430,12 @@ class Stacklimit:
                                            'to define the platform.')
                 raise ValueError()
 
-        if arch not in ARCHITECTURES:
+        if arch not in Pattern.arch:
             self._print(Message.ERROR, 'Unsupported platform \'' + arch + '\'.\n'
                                        'Supported platforms are: ', end='')
-            for arch in ARCHITECTURES[:-2]:
-                print(arch, end=', ')
-            print(ARCHITECTURES[-2] + ' and ' + ARCHITECTURES[-1] + '.\n')
+            for arch in Pattern.arch[:-2]:
+                self._print(Message.INFO, arch, end=', ', prefix='')
+            self._print(Message.INFO, Pattern.arch[-2] + ' and ' + Pattern.arch[-1] + '.\n', prefix='')
             raise ValueError()
 
         self._print(Message.DEBUG, 'Using architecture ' + self._bold(arch))
@@ -519,7 +641,7 @@ class Stacklimit:
             self._print(Message.DEBUG, '...', prefix=False)
 
     def _regard_function(self, function):
-        return function.address != 0 and (self.regard_os_functions or function.name not in OS_FUNCTIONS)
+        return function.address != 0 and (self.regard_os_functions or function.name not in Pattern.os_functions)
 
     def _handle_dynamic(self, callstack):
         current = callstack[-1]
@@ -608,10 +730,19 @@ class Stacklimit:
         return True
 
     def parse(self, binary):
-        # TODO: Use arch for autodetecting architecture and check with the right objdump version
-        arch = None
         current = None
         file = None
+
+        if self.arch in aarch64.arch:
+            pattern = aarch64
+        elif self.arch in arm.arch:
+            pattern = arm
+        elif self.arch in x86.arch:
+            pattern = x86
+        elif self.arch in x86_64.arch:
+            pattern = x86_64
+        else:
+            return
 
         objdump_cmd = [self.objdump_path, '-d', binary]
         objdump = subprocess.Popen(objdump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -619,17 +750,13 @@ class Stacklimit:
         for line in objdump.stdout:
             line = line.decode('utf-8')[:-1]
 
-            if re.match(Pattern.FileFormat, line):
+            if re.match(pattern.FileFormat, line):
                 line_array = line.split(' ')
-                arch = line_array[-1]
                 path = line_array[0][:-1]
                 file = path.split('/')[-1]
 
-            elif re.match(Pattern.Function, line):
-                line_array = line.split(' ')
-                address = int(line_array[0], 16)
-                name = line_array[1][1:-2]
-
+            elif re.match(pattern.Function, line):
+                (address, name) = pattern.get_function(line)
                 current = self.stacktable.find(address)
 
                 if current:
@@ -637,20 +764,21 @@ class Stacklimit:
                 else:
                     current = self.stacktable.append(Stack.Function(address=address, name=name, file=file))
 
-            elif re.match(Pattern.StackPushOp, line):
-                register = line[-3]
+                current.visited = True
 
-                # 32 bit register
-                if register == 'e':
-                    current.size += 4
-                # 64 bit register
-                elif register == 'r':
-                    current.size += 8
+            elif pattern.StackPushOp and re.match(pattern.StackPushOp, line):
+                self._print(Message.DEBUG, 'StackPushOp    ', line)
+                size = pattern.get_stack_push_size(line)
+                current.size += size
+                self._print(Message.DEBUG, ' -> ', current.name)
 
-            elif re.match(Pattern.StackSubOp, line):
-                temp = line.split(' ')[-1]
-                temp = temp.split(',')[0][1:]
-                size = int(temp, 16)
+            # Note: We ignore all 'add' operations. We only interested in 'sub'.
+            elif pattern.StackSubOp and re.match(pattern.StackSubOp, line):
+                temp = pattern.get_stack_sub_size(line)
+                if temp[:2] == '0x':
+                    size = int(temp, 16)
+                else:
+                    size = int(temp)
 
                 if size > 0xf0000000:
                     size = -size
@@ -662,14 +790,13 @@ class Stacklimit:
 
                 current.size += size
 
-            elif re.match(Pattern.StackDynamicOp, line):
+            elif pattern.StackDynamicOp and re.match(pattern.StackDynamicOp, line):
                 current.dynamic = True
 
-            elif re.match(Pattern.FunctionCall, line):
-                line_array = line.split(' ')
-                address = int(line_array[-2], 16)
-                name = line_array[-1][1:-1]
+            elif pattern.FunctionCall and re.match(pattern.FunctionCall, line):
+                self._print(Message.DEBUG, 'FunctionCall   ', line)
 
+                (address, name) = pattern.get_function_call(line)
                 function = self.stacktable.find(address)
 
                 if not function:
@@ -679,15 +806,22 @@ class Stacklimit:
                     current.calls.append(function)
                     function.returns.append(current)
 
-            elif re.match(Pattern.FunctionPointer, line):
+            elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
+                self._print(Message.DEBUG, 'FunctionPointer', line)
+
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
 
+        for function in [function for function in self.stacktable if not function.visited and function.address != 0]:
+            del(self.stacktable[function])
+
+        for function in self.stacktable:
+            function.visited = False
+
     def get_stack_limit(self):
         return self.stacktable.limit()
 
-    # TODO: Print also '>' for imprecise functions
     def print_stack_table(self, header=False):
         # Should never happen
         if not self.stacktable:
@@ -712,11 +846,11 @@ class Stacklimit:
         total_len = int(log(total_len, 10).real + 1) + 1
 
         if header:
-            print('{:>{}} {:<{}}  {:<{}}  {:>{}} {:>{}}'.format('address',  address_len,
-                                                                'function', name_len,
-                                                                'file',     file_len,
-                                                                'fsize',    size_len,
-                                                                'tsize',    total_len))
+            self._print(Message.INFO, '{:>{}} {:<{}}  {:<{}}  {:>{}} {:>{}}'.format('address',  address_len,
+                                                                                    'function', name_len,
+                                                                                    'file',     file_len,
+                                                                                    'fsize',    size_len,
+                                                                                    'tsize',    total_len))
 
         self.stacktable.sort()
 
@@ -733,7 +867,7 @@ class Stacklimit:
                 total_prefix_len = total_len - int(log(function.total + 1, 10).real) - 1
                 total = '{:>{width}}{}'.format(imprecise, total, width=total_prefix_len)
 
-                print('{} {}  {}  {} {}'.format(address, name, file, size, total))
+                self._print(Message.INFO, '{} {}  {}  {} {}'.format(address, name, file, size, total))
 
     def print_call_tree(self):
         for top in self.stacktable:
