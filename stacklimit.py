@@ -818,6 +818,10 @@ class Stacklimit:
                 else:
                     size = int(temp)
 
+                # TODO: Rewrite this
+                if size > 0xf000000000000000:
+                    continue
+
                 if size > 0xf0000000:
                     size = -size
                     size += 0x80000000
