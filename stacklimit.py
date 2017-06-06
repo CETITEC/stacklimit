@@ -164,6 +164,7 @@ class aarch64(arm):
 
     #  4bc:   a9bc7bfd    stp x29, x30, [sp,#-64]!
     #  894:   a9af7bfd    stp x29, x30, [sp,#-272]!
+    # TODO: Add sorts like 'str x19, [sp,#16]'
     StackSubOp = '.*stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp,\#-[0-9]+\]\!$'
 
     @staticmethod
