@@ -504,6 +504,43 @@ class Stacklimit:
         return False
 
     def _get_arch(self, binary):
+        arch = self._get_arch_with_readelf(binary)
+        if not arch:
+            # Since the initramfs is not really an ELF file we have to use objdump
+            arch = self._get_arch_with_objdump(binary)
+
+        if not arch:
+            self._print(Message.DEBUG, 'Maybe the binary is not an ELF file.')
+
+        return arch
+
+    def _get_arch_with_objdump(self, binary):
+        if not binary:
+            return None
+
+        if not self._find_objdump(binary):
+            return None
+
+        cmd = [self.objdump_path, '-a', binary]
+        output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
+
+        if output == '':
+            self._print(Message.DEBUG, 'Couldn\'t read binary with objdump.')
+            return None
+
+        output_array = output.split('file format ')
+
+        if len(output_array) < 2:
+            self._print(Message.DEBUG, 'Couldn\'t find \'' + self._bold('file format') + '\' in output of objdump. '
+                                       'Maybe the syntax has changed.')
+            return None
+
+        output = output_array[1]
+        output = output.split('\n')[0]
+
+        return get_arch(output)
+
+    def _get_arch_with_readelf(self, binary):
         if not binary:
             return None
 
@@ -511,7 +548,7 @@ class Stacklimit:
         output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 
         if output == '':
-            self._print(Message.DEBUG, 'Couldn\'t read binary with readelf. Maybe the binary is not an ELF file.')
+            self._print(Message.DEBUG, 'Couldn\'t read binary with readelf.')
             return None
 
         output_array = output.split('Machine:')
