@@ -25,8 +25,8 @@ int64_t func_alpha2(int64_t a) {
 }
 
 int64_t func_alpha(int64_t a) {
-    int64_t tmp = a;
-    int64_t tmp2 = 2 * a;
+	int64_t tmp = a;
+	int64_t tmp2 = 2 * a;
 
 	tmp = func_alpha2(tmp + tmp2);
 

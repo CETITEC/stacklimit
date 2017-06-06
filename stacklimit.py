@@ -447,7 +447,7 @@ class Stacklimit:
 
         if objdump:
             self.objdump_path = self._get_tool_path(objdump)
-            supported = self._has_objdmup_support(binary)
+            supported = self._has_objdump_support(binary)
         else:
             supported = self._find_objdump(binary)
 
@@ -495,7 +495,7 @@ class Stacklimit:
 
             origin = output.split(' ')[0]
             # Add support for llvm-objdump
-            if origin == 'GNU' and self._has_objdmup_support(binary, objdump):
+            if origin == 'GNU' and self._has_objdump_support(binary, objdump):
                 self.objdump_path = objdump
                 return True
 
@@ -536,7 +536,7 @@ class Stacklimit:
         self._print(Message.ERROR, 'Couldn\'t find \'' + self._bold(tool) + '\'')
         raise ValueError()
 
-    def _has_objdmup_support(self, binary, objdump=None):
+    def _has_objdump_support(self, binary, objdump=None):
         if not binary:
             return False
 
