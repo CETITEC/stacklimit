@@ -117,8 +117,7 @@ class arm(Pattern):
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
     #   10918:   e12fff33    blx r3
-    # TODO: Test this
-    FunctionPointer = '.*(bx|blx)[a-z]{2}( |\t)+[a-z]+$'
+    FunctionPointer = '.*(bx|bx[a-z]{2}|bxj|blx)( |\t)+r[0-9]+$'
 
     # TODO:
     StackPushOp = '.*push( |\t)+'
