@@ -108,16 +108,13 @@ class arm(Pattern):
     arch = ['arm']
 
     #   1069c:        ebffff80        bl      104a4 <func_alpha>
-    #   10900:        ea000002        b       10910 <main+0x7c>
     # TODO: Test cbz and cbnz
-    # FIXME: False positive on 10900 => if branch and no function call!
     FunctionCall = '.*((b|b[a-z]{2}|bl|blx)|(cbz|cbnz)( |\t)+r[0-9]+,)( |\t)+[0-9]+'
 
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
     #   10918:   e12fff33    blx r3
     # TODO: Test this
-    # FIXME: False positive on 10900 => if branch and no function call!
     FunctionPointer = '.*(bx|blx)[a-z]{2}( |\t)+[a-z]+$'
 
     # TODO:
@@ -856,7 +853,14 @@ class Stacklimit:
                 function_pointer.returns.append(current)
 
         for function in [function for function in self.stacktable if not function.visited and function.address != 0]:
+            address = self._bold(hex(function.address))
+            name = self._func(function.returns[0].name)
+            self._print(Message.DEBUG, 'Ignore inner FunctionCall in {} to {} ({})'.format(name,
+                                                                                           address,
+                                                                                           function.name))
             del(self.stacktable[function])
+            for caller in function.returns:
+                del(caller.calls[function])
 
         for function in self.stacktable:
             function.visited = False
