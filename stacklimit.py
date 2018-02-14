@@ -662,7 +662,7 @@ class Stacklimit:
         if self.multiple_warn:
             self._print(Message.WARN, 'Found cycle in call graph entering with \'' + self._func(current.name) + '\'')
         else:
-            self._print(Message.WARN, 'Found cycle in call graph')
+            self._print(Message.WARN, 'Found cycles in call graph')
 
         if self.debug and self.warn_cycle:
             path_string = [self._func(call.name) for call in callstack]
@@ -691,7 +691,10 @@ class Stacklimit:
 
         if self.warn_dynamic:
             self.warn_dynamic = self.multiple_warn
-            self._print(Message.WARN, 'Dynamic stack operation in function \'' + self._func(current.name) + '\'')
+            if self.multiple_warn:
+                self._print(Message.WARN, 'Dynamic stack operation in function \'' + self._func(current.name) + '\'')
+            else:
+                self._print(Message.WARN, 'Found dynamic stack operations')
 
     def _handle_function_pointer(self, callstack):
         current = callstack[-1]
@@ -706,7 +709,7 @@ class Stacklimit:
             if self.multiple_warn:
                 self._print(Message.WARN, 'Function \'' + self._func(current.name) + '\' calls a function pointer')
             else:
-                self._print(Message.WARN, 'Found a function pointer')
+                self._print(Message.WARN, 'Found function pointers')
 
     def _handle_cycle(self, callstack):
         current = callstack[-1]
