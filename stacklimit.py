@@ -110,25 +110,25 @@ class Pattern:
 class arm(Pattern):
     arch = ['arm']
 
-    #   1069c:        ebffff80        bl      104a4 <func_alpha>
+    #   1069c:   ebffff80        bl      104a4 <func_alpha>
     # TODO: Test cbz and cbnz
-    FunctionCall = '.*((b|b[a-z]{2}|bl|blx)|(cbz|cbnz)( |\t)+r[0-9]+,)( |\t)+[0-9]+'
+    FunctionCall = '.*( |\t)+((b[a-z]{2}|blx|bl|b)(.n|)|(cbz|cbnz)( |\t)+r[0-9]+,)( |\t)+[0-9]+'
 
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
     #   10918:   e12fff33    blx r3
-    FunctionPointer = '.*(bx|bx[a-z]{2}|bxj|blx)( |\t)+r[0-9]+$'
+    FunctionPointer = '.*( |\t)+(bx[a-z]{2}|bxj|blx|bx)( |\t)+r[0-9]+$'
 
-    StackPushOp = '.*(push( |\t)+|' \
-                     'stm(ia|ib|da|db)(.w|w|s|)( |\t)+sp)'
+    StackPushOp = '.*( |\t)+(push( |\t)+|' \
+                            'stm(ia|ib|da|db)(.w|w|s|)( |\t)+sp)'
 
     #   ad5e0a:   b0f8        sub sp, #480    ; 0x1e0
     #   ad7620:   b093        sub sp, #76 ; 0x4c
     #   a31760:   e24dd01c    sub sp, sp, #28
     #   a31760:   e24dd01c    add sp, sp, #-28
     #   ad6e4e:   f5ad 7d21   sub.w   sp, sp, #644
-    StackSubOp = '.*(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#|' \
-                    'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-)[0-9]+'
+    StackSubOp = '.*( |\t)+(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#|' \
+                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-)[0-9]+'
 
     @staticmethod
     def get_function_call(line):
@@ -165,12 +165,11 @@ class aarch64(arm):
     FunctionPointer = None
 
     # TODO
-    StackPushOp = '.*push( |\t)+'
+    StackPushOp = '.*( |\t)+push( |\t)+'
 
     #  4bc:   a9bc7bfd    stp x29, x30, [sp,#-64]!
     #  894:   a9af7bfd    stp x29, x30, [sp,#-272]!
-    # TODO: Add sorts like 'str x19, [sp,#16]'
-    StackSubOp = '.*stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp,\#-[0-9]+\]\!$'
+    StackSubOp = '.*( |\t)+stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp,\#-[0-9]+\]\!$'
 
     @staticmethod
     def get_stack_push_size(line):
@@ -194,14 +193,14 @@ class x86(Pattern):
 
     #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
     #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
-    StackDynamicOp = '.*sub( |\t)+\%.*,\%(e|r)sp$'
+    StackDynamicOp = '.*( |\t)+sub( |\t)+\%.*,\%(e|r)sp$'
 
     #   4004c3:   55                      push   %esp
     #   4004c3:   55                      push   %rsp
-    StackPushOp = '.*push(l|)( |\t)+'
+    StackPushOp = '.*( |\t)+push(l|)( |\t)+'
 
     #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
-    StackSubOp = '.*sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$'
+    StackSubOp = '.*( |\t)+sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$'
 
     @staticmethod
     def get_function_call(line):
@@ -228,7 +227,7 @@ class x86_64(x86):
 
     #   4004c3:   55                      push   %esp
     #   4004c3:   55                      pushq  %rbp
-    StackPushOp = '.*push(q|)( |\t)+'
+    StackPushOp = '.*( |\t)+push(q|)( |\t)+'
 
     @staticmethod
     def get_stack_push_size(line):
