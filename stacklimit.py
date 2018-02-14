@@ -125,8 +125,10 @@ class arm(Pattern):
     #   ad5e0a:   b0f8        sub sp, #480    ; 0x1e0
     #   ad7620:   b093        sub sp, #76 ; 0x4c
     #   a31760:   e24dd01c    sub sp, sp, #28
+    #   a31760:   e24dd01c    add sp, sp, #-28
     #   ad6e4e:   f5ad 7d21   sub.w   sp, sp, #644
-    StackSubOp = '.*sub(.w|w|)( |\t)+sp,( |\t)+sp,( |\t)+\#[0-9]+'
+    StackSubOp = '.*(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#|' \
+                    'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-)[0-9]+'
 
     @staticmethod
     def get_function_call(line):
@@ -148,7 +150,10 @@ class arm(Pattern):
         temp = line.split('#')[-1]
         temp = temp.split('\n')[0]
         temp = temp.split('\t')[0]
-        return temp.split(' ')[0]
+        temp = temp.split(' ')[0]
+        if temp[0] == '-':
+            temp = temp[1:]
+        return temp
 
 
 class aarch64(arm):
