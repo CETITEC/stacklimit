@@ -683,7 +683,7 @@ class Stacklimit:
     def _handle_dynamic(self, callstack):
         current = callstack[-1]
 
-        if not current.dynamic or not self._regard_function(current):
+        if not current.dynamic:
             return
 
         for node in callstack[:-1]:
@@ -696,7 +696,7 @@ class Stacklimit:
     def _handle_function_pointer(self, callstack):
         current = callstack[-1]
 
-        if not [child for child in current.calls if child.address == 0] or not self._regard_function(current):
+        if not [child for child in current.calls if child.address == 0]:
             return
 
         for node in callstack[:-1]:
@@ -736,8 +736,10 @@ class Stacklimit:
         if current.visited:
             return False
 
-        self._handle_dynamic(callstack)
-        self._handle_function_pointer(callstack)
+        if self._regard_function(current):
+            self._handle_dynamic(callstack)
+            self._handle_function_pointer(callstack)
+
         return self._handle_cycle(callstack)
 
     def calculate_stack(self):
