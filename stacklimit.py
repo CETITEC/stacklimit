@@ -142,8 +142,9 @@ class arm(Pattern):
 
     @staticmethod
     def get_stack_push_size(line):
-        # TODO
-        return 0
+        temp = line.split('{')[-1]
+        temp = temp.split('}')[0]
+        return 4 * (temp.count(',') + 1)
 
     @staticmethod
     def get_stack_sub_size(line):
