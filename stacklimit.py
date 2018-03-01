@@ -107,6 +107,7 @@ class Pattern:
         return address, name
 
 
+# ARM and Thumb instruction set
 class arm(Pattern):
     arch = ['arm']
 
@@ -127,8 +128,8 @@ class arm(Pattern):
     #   a31760:   e24dd01c    sub sp, sp, #28
     #   a31760:   e24dd01c    add sp, sp, #-28
     #   ad6e4e:   f5ad 7d21   sub.w   sp, sp, #644
-    StackSubOp = '.*( |\t)+(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#|' \
-                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-)(0x|)[0-9]+'
+    StackSubOp = '.*( |\t)+(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#(0x|)[0-9]+|' \
+                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#-(0x|)[0-9]+)' \
 
     @staticmethod
     def get_function_call(line):
