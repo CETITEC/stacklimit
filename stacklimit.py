@@ -132,11 +132,14 @@ class arm(Pattern):
 
     @staticmethod
     def get_function_call(line):
+        name = line.split('<')[1]
+        name = name.split('>')[0]
+
+        line = line.split(' <')[0]
         line = line.replace('\t', ' ')
         line = line.replace('  ', ' ')
         line_array = line.split(' ')
-        address = int(line_array[-2], 16)
-        name = line_array[-1][1:-1]
+        address = int(line_array[-1], 16)
 
         return address, name
 
