@@ -172,9 +172,11 @@ class aarch64(arm):
 
     #  4bc:   a9bc7bfd    stp x29, x30, [sp,#-64]!
     #  894:   a9af7bfd    stp x29, x30, [sp,#-272]!
-    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp, \#-[0-9]+\]|' \
-                           '(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#|' \
-                            'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-)(0x|)[0-9]+)'
+    # 4610:   f81d0ffe    str     x30, [sp, #-48]!
+    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x|)[0-9]+\]|' \
+                           'str(.w|w|s|)( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x|)[0-9]+\]|' \
+                           'sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#(0x|)[0-9]+|' \
+                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-(0x|)[0-9]+)'
 
     @staticmethod
     def get_stack_push_size(line):
