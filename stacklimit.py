@@ -169,7 +169,9 @@ class aarch64(arm):
 
     #  4bc:   a9bc7bfd    stp x29, x30, [sp,#-64]!
     #  894:   a9af7bfd    stp x29, x30, [sp,#-272]!
-    StackSubOp = '.*( |\t)+stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp,\#-[0-9]+\]\!$'
+    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp, \#-[0-9]+\]|' \
+                           '(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#|' \
+                            'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-)(0x|)[0-9]+)'
 
     @staticmethod
     def get_stack_push_size(line):
@@ -179,7 +181,10 @@ class aarch64(arm):
     @staticmethod
     def get_stack_sub_size(line):
         temp = line.split('#')[-1]
-        return temp.split(']')[0][1:]
+        temp = temp.split(']')[0]
+        if temp[0] == '-':
+            temp = temp[1:]
+        return temp
 
 
 class x86(Pattern):
