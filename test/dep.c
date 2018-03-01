@@ -1,22 +1,22 @@
 #include <stdint.h>
 
-int64_t func_omega2(void) {
+int64_t __attribute__ ((noinline)) func_omega2(void) {
 	return 0;
 }
 
-int64_t func_omega(void) {
+int64_t __attribute__ ((noinline)) func_omega(void) {
 	return func_omega2();
 }
 
-int64_t func_alpha4(int64_t a) {
+int64_t __attribute__ ((noinline)) func_alpha4(int64_t a) {
 	return a + 1;
 }
 
-int64_t func_alpha3(int64_t a) {
+int64_t __attribute__ ((noinline)) func_alpha3(int64_t a) {
 	return a + func_alpha4(3);
 }
 
-int64_t func_alpha2(int64_t a) {
+int64_t __attribute__ ((noinline)) func_alpha2(int64_t a) {
     int64_t tmp = a;
 
 	tmp = func_alpha3(tmp);
@@ -24,7 +24,7 @@ int64_t func_alpha2(int64_t a) {
 	return tmp;
 }
 
-int64_t func_alpha(int64_t a) {
+int64_t __attribute__ ((noinline)) func_alpha(int64_t a) {
 	int64_t tmp = a;
 	int64_t tmp2 = 2 * a;
 
@@ -33,7 +33,7 @@ int64_t func_alpha(int64_t a) {
 	return tmp;
 }
 
-int64_t func_beta(int64_t a, int64_t b) {
+int64_t __attribute__ ((noinline)) func_beta(int64_t a, int64_t b) {
 	int64_t tmp = a + b;
 
 	tmp = func_alpha(tmp);
@@ -41,7 +41,7 @@ int64_t func_beta(int64_t a, int64_t b) {
 	return tmp;
 }
 
-int64_t func_gamma(int64_t a, int64_t b, int64_t c) {
+int64_t __attribute__ ((noinline)) func_gamma(int64_t a, int64_t b, int64_t c) {
 	int64_t tmp = 0;
 
 	tmp = func_alpha(tmp);
@@ -50,7 +50,7 @@ int64_t func_gamma(int64_t a, int64_t b, int64_t c) {
 	return tmp + a + b + c;
 }
 
-int64_t func_delta(int64_t a, int64_t b, int64_t c, int64_t d) {
+int64_t __attribute__ ((noinline)) func_delta(int64_t a, int64_t b, int64_t c, int64_t d) {
 	int64_t tmp = 0;
 
 	tmp += func_alpha(a);
@@ -60,7 +60,7 @@ int64_t func_delta(int64_t a, int64_t b, int64_t c, int64_t d) {
 	return tmp + a + b + c + d;
 }
 
-int64_t func_epsilon(int64_t a, int64_t b, int64_t c, int64_t d, int64_t e) {
+int64_t __attribute__ ((noinline)) func_epsilon(int64_t a, int64_t b, int64_t c, int64_t d, int64_t e) {
 	int64_t tmp = 0;
 
 	tmp += func_alpha(a);
@@ -71,7 +71,7 @@ int64_t func_epsilon(int64_t a, int64_t b, int64_t c, int64_t d, int64_t e) {
 	return tmp + a + b + c + d + e;
 }
 
-int64_t rec_xi(int64_t a) {
+int64_t __attribute__ ((noinline)) rec_xi(int64_t a) {
 	if (a < 10) {
 		a++;
 	}
@@ -81,7 +81,7 @@ int64_t rec_xi(int64_t a) {
 
 int64_t rec_psi(int64_t a);
 
-int64_t rec_phi(int64_t a) {
+int64_t __attribute__ ((noinline)) rec_phi(int64_t a) {
 	if (a < 10) {
 		return rec_psi(a + 1);
 	}
@@ -89,11 +89,11 @@ int64_t rec_phi(int64_t a) {
 	return a;
 }
 
-int64_t rec_chi(int64_t a) {
+int64_t __attribute__ ((noinline)) rec_chi(int64_t a) {
 	return rec_phi(a + 1);
 }
 
-int64_t rec_psi(int64_t a) {
+int64_t __attribute__ ((noinline)) rec_psi(int64_t a) {
 	return rec_chi(a + 1);
 }
 
