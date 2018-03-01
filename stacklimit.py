@@ -824,7 +824,7 @@ class Stacklimit:
                 current.size += size
                 self._print(Message.DEBUG, ' -> ', current.name)
 
-            # Note: We ignore all 'add' operations. We only interested in 'sub'.
+            # Note: We ignore all 'add' operations. We're only interested in 'sub'.
             elif pattern.StackSubOp and re.match(pattern.StackSubOp, line):
                 temp = pattern.get_stack_sub_size(line)
                 if temp[:2] == '0x':
