@@ -102,7 +102,7 @@ class Pattern:
     def get_function(line):
         line_array = line.split(' ')
         address = int(line_array[0], 16)
-        name = line_array[1][1:-2]
+        name = ' '.join(line_array[1:])[1:-2]
 
         return address, name
 
