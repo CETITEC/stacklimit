@@ -118,8 +118,8 @@ class arm(Pattern):
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
     #   10918:   e12fff33    blx r3
-    # TODO: bne.w is also a branch command
-    FunctionPointer = '.*( |\t)+(bx[a-z]{2}|bxj|blx|bx)( |\t)+r[0-9]+$'
+    FunctionPointer = '.*( |\t)+((bx[a-z]{2}|bxj|blx|bx)( |\t)+r[0-9]|' \
+                                'bne(.w|w|s|)( |\t)+(0x[0-9a-f]+|[0-9]+))'
 
     StackPushOp = '.*( |\t)+(push( |\t)+|' \
                             'stm(ia|ib|da|db)(.w|w|s|)( |\t)+sp)'
