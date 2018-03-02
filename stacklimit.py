@@ -151,10 +151,15 @@ class arm(Pattern):
         return address, name
 
     @staticmethod
-    def get_stack_push_size(line):
+    def get_stack_push_count(line):
+        # TODO: push {r0,r4-r7}
         temp = line.split('{')[-1]
         temp = temp.split('}')[0]
-        return 4 * (temp.count(',') + 1)
+        return temp.count(',') + 1
+
+    @staticmethod
+    def get_stack_push_size(line):
+        return 4 * arm.get_stack_push_count(line)
 
     @staticmethod
     def get_stack_sub_size(line):
@@ -172,8 +177,7 @@ class aarch64(arm):
 
     @staticmethod
     def get_stack_push_size(line):
-        # TODO
-        return 0
+        return 8 * arm.get_stack_push_count(line)
 
     @staticmethod
     def get_stack_sub_size(line):
