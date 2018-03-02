@@ -118,18 +118,24 @@ class arm(Pattern):
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
     #   10918:   e12fff33    blx r3
+    # TODO: bne.w is also a branch command
     FunctionPointer = '.*( |\t)+(bx[a-z]{2}|bxj|blx|bx)( |\t)+r[0-9]+$'
 
     StackPushOp = '.*( |\t)+(push( |\t)+|' \
                             'stm(ia|ib|da|db)(.w|w|s|)( |\t)+sp)'
 
-    #   ad5e0a:   b0f8        sub sp, #480    ; 0x1e0
-    #   ad7620:   b093        sub sp, #76 ; 0x4c
-    #   a31760:   e24dd01c    sub sp, sp, #28
-    #   a31760:   e24dd01c    add sp, sp, #-28
-    #   ad6e4e:   f5ad 7d21   sub.w   sp, sp, #644
-    StackSubOp = '.*( |\t)+(sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#(0x|)[0-9]+|' \
-                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#-(0x|)[0-9]+)' \
+    #   ad5e0a:   b0f8        sub   sp,  #480
+    #   ad7620:   b093        sub   sp,  #76
+    #   a31760:   e24dd01c    sub   sp,  sp, #28
+    #   a31760:   e24dd01c    add   sp,  sp, #-28
+    #   ad6e4e:   f5ad7d21    sub.w sp,  sp, #644
+    #      4bc:   a9bc7bfd    stp   x29, x30, [sp,#-64]!
+    #      894:   a9af7bfd    stp   x29, x30, [sp,#-272]!
+    #     4610:   f81d0ffe    str        x30, [sp, #-48]!
+    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x|)[0-9]+\]|' \
+                           'str(.w|w|s|)( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x|)[0-9]+\]|' \
+                           'sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#(0x|)[0-9]+|' \
+                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#-(0x|)[0-9]+)'
 
     @staticmethod
     def get_function_call(line):
@@ -163,21 +169,6 @@ class arm(Pattern):
 
 class aarch64(arm):
     arch = ['aarch64']
-
-    # TODO
-    # TODO: bne.w is also a branch command
-    FunctionPointer = None
-
-    # TODO
-    StackPushOp = '.*( |\t)+push( |\t)+'
-
-    #  4bc:   a9bc7bfd    stp x29, x30, [sp,#-64]!
-    #  894:   a9af7bfd    stp x29, x30, [sp,#-272]!
-    # 4610:   f81d0ffe    str     x30, [sp, #-48]!
-    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x|)[0-9]+\]|' \
-                           'str(.w|w|s|)( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x|)[0-9]+\]|' \
-                           'sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#(0x|)[0-9]+|' \
-                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#\-(0x|)[0-9]+)'
 
     @staticmethod
     def get_stack_push_size(line):
