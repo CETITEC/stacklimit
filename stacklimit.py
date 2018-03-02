@@ -113,7 +113,8 @@ class arm(Pattern):
 
     #   1069c:   ebffff80        bl      104a4 <func_alpha>
     # TODO: Test cbz and cbnz
-    FunctionCall = '.*( |\t)+((b[a-z]{2}|blx|bl|b)(.n|)|(cbz|cbnz)( |\t)+r[0-9]+,)( |\t)+[0-9]+'
+    FunctionCall = '.*( |\t)+((b[a-z]{2}|blx|bl|b)(.n|)( |\t)+[0-9]+|' \
+                             '(cbz|cbnz)( |\t)+r[0-9]+,( |\t)+[0-9]+)'
 
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
