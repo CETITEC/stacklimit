@@ -114,15 +114,15 @@ class arm(Pattern):
     #   1069c:   ebffff80        bl      104a4 <func_alpha>
     # TODO: Test cbz and cbnz
     FunctionCall = '.*( |\t)+((b[a-z]{2}|blx|bl|b)(.n|)( |\t)+[0-9]+|' \
-                             '(cbz|cbnz)( |\t)+r[0-9]+,( |\t)+[0-9]+)'
+                             '(cbz|cbnz)( |\t)+[a-z]([a-z]|[0-9]+),( |\t)+[0-9]+)'
 
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
     #   10918:   e12fff33    blx r3
-    FunctionPointer = '.*( |\t)+((bx[a-z]{2}|bxj|blx|bx)( |\t)+r[0-9]|' \
+    FunctionPointer = '.*( |\t)+((bx[a-z]{2}|bxj|blx|bx)( |\t)+[a-z]([a-z]|[0-9]+)|' \
                                 'bne(.w|w|s|)( |\t)+(0x[0-9a-f]+|[0-9]+))'
 
-    StackPushOp = '.*( |\t)+(push( |\t)+|' \
+    StackPushOp = '.*( |\t)+(push(|[a-z]{2})( |\t)+|' \
                             'stm(ia|ib|da|db)(.w|w|s|)( |\t)+sp)'
 
     #   ad5e0a:   b0f8        sub   sp,  #480
@@ -133,8 +133,8 @@ class arm(Pattern):
     #      4bc:   a9bc7bfd    stp   x29, x30, [sp,#-64]!
     #      894:   a9af7bfd    stp   x29, x30, [sp,#-272]!
     #     4610:   f81d0ffe    str        x30, [sp, #-48]!
-    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]|' \
-                           'str(.w|w|s|)( |\t)+x[0-9]+,( |\t)+\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]|' \
+    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+[a-z]([a-z]|[0-9]+),( |\t)+\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]|' \
+                           'str(.w|w|s|)( |\t)+[a-z]([a-z]|[0-9]+),( |\t)+\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]|' \
                            'sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#(0x[0-9a-f]|[0-9]+)|' \
                            'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#-(0x[0-9a-f]|[0-9]+))'
 
