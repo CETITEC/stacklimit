@@ -35,6 +35,19 @@ def get_arch(arch):
     return None
 
 
+# instruction [reg1[, reg2[, reg3 [...]]]]
+def _operation(*args):
+    op = '.*( |\t)+{}'.format(args[0])
+
+    if len(args) > 1:
+        op = '{}( |\t)+{}'.format(op, args[1])
+
+    for arg in args[2:]:
+        op = '{},( |\t)+{}'.format(op, arg)
+
+    return op
+
+
 class Color:
     BLUE = '\033[94m'
     CYAN = '\033[96m'
@@ -113,17 +126,22 @@ class arm(Pattern):
 
     #   1069c:   ebffff80        bl      104a4 <func_alpha>
     # TODO: Test cbz and cbnz
-    FunctionCall = '.*( |\t)+((b[a-z]{2}|blx|bl|b)(.n|)( |\t)+[0-9]+|' \
-                             '(cbz|cbnz)( |\t)+[a-z]([a-z]|[0-9]+),( |\t)+[0-9]+)'
+    FunctionCall = '(' + _operation('(b[a-z]{2}|blx|bl|b)(.n|)', '[0-9]+') \
+                 + '|' + _operation('(cbz|cbnz)',                '[a-z]([a-z]|[0-9]+)', '[0-9]+') \
+                 + ')'
 
     #   1031c:   e12fff13    bx  r3
     #   10344:   012fff1e    bxeq    lr
     #   10918:   e12fff33    blx r3
-    FunctionPointer = '.*( |\t)+((bx[a-z]{2}|bxj|blx|bx)( |\t)+[a-z]([a-z]|[0-9]+)|' \
-                                'bne(.w|w|s|)( |\t)+(0x[0-9a-f]+|[0-9]+))'
+    FunctionPointer = '(' + _operation('(bx[a-z]{2}|bxj|blx|bx)', '[a-z]([a-z]|[0-9]+)') \
+                    + '|' + _operation('bne(.w|w|s|)',            '(0x[0-9a-f]+|[0-9]+)') \
+                    + ')'
 
-    StackPushOp = '.*( |\t)+(push(|[a-z]{2})( |\t)+|' \
-                            'stm(ia|ib|da|db)(.w|w|s|)( |\t)+sp)'
+    # TODO: Test stm*
+    # TODO: push{cond}
+    StackPushOp = '(' + _operation('push(|[a-z]{2})') \
+                + '|' + _operation('stm(ia|ib|da|db)(.w|w|s|)', 'sp') \
+                + ')'
 
     #   ad5e0a:   b0f8        sub   sp,  #480
     #   ad7620:   b093        sub   sp,  #76
@@ -133,10 +151,11 @@ class arm(Pattern):
     #      4bc:   a9bc7bfd    stp   x29, x30, [sp,#-64]!
     #      894:   a9af7bfd    stp   x29, x30, [sp,#-272]!
     #     4610:   f81d0ffe    str        x30, [sp, #-48]!
-    StackSubOp = '.*( |\t)+(stp( |\t)+x[0-9]+,( |\t)+[a-z]([a-z]|[0-9]+),( |\t)+\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]|' \
-                           'str(.w|w|s|)( |\t)+[a-z]([a-z]|[0-9]+),( |\t)+\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]|' \
-                           'sub(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#(0x[0-9a-f]|[0-9]+)|' \
-                           'add(.w|w|s|)( |\t)+sp,( |\t)+sp,( |\t)+\#-(0x[0-9a-f]|[0-9]+))'
+    StackSubOp = '(' + _operation('stp', 'x[0-9]+', '[a-z]([a-z]|[0-9]+)', '\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]') \
+               + '|' + _operation('str(.w|w|s|)',   '[a-z]([a-z]|[0-9]+)', '\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]') \
+               + '|' + _operation('sub(.w|w|s|)',   'sp',                  'sp',            '\#(0x[0-9a-f]|[0-9]+)') \
+               + '|' + _operation('add(.w|w|s|)',   'sp',                  'sp',            '\#-(0x[0-9a-f]|[0-9]+)') \
+               + ')'
 
     @staticmethod
     def get_function_call(line):
