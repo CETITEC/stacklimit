@@ -935,35 +935,46 @@ class Stacklimit:
     def get_stack_limit(self):
         return self.stacktable.limit()
 
-    def print_stack_table(self, header=False):
+    def print_stack_table(self, show_header=False, show_section=False):
         # Should never happen
         if not self.stacktable:
             return
 
-        address_len = 0xfffff if header else 1
-        name_len = 8 if header else 1
-        file_len = 4 if header else 1
-        size_len = 99999 if header else 1
-        total_len = 99999 if header else 1
+        address_len = 0xfffff if show_header else 1
+        name_len = 8 if show_header else 1
+        section_len = 7 if show_header else 1
+        file_len = 4 if show_header else 1
+        size_len = 99999 if show_header else 1
+        # This is correct! The length is increment by one later
+        total_len = 9999 if show_header else 1
 
         for function in self.stacktable:
             address_len = max(function.address, address_len)
             name_len = max(len(function.name), name_len)
             if function.file:
                 file_len = max(len(function.file), file_len)
+            if show_section and function.section:
+                section_len = max(len(function.section), section_len)
             size_len = max(function.size, size_len)
             total_len = max(function.total, total_len)
 
         address_len = int(log(address_len, 16).real + 3)
         size_len = int(log(size_len, 10).real + 1)
+        # Increment the length for the imprecise symbol
         total_len = int(log(total_len, 10).real + 1) + 1
 
-        if header:
-            self._print(Message.INFO, '{:>{}} {:<{}}  {:<{}}  {:>{}} {:>{}}'.format('address',  address_len,
-                                                                                    'function', name_len,
-                                                                                    'file',     file_len,
-                                                                                    'fsize',    size_len,
-                                                                                    'tsize',    total_len))
+        if show_header:
+            section = 'section '
+            if not show_section:
+                section = ''
+                section_len = 0
+
+            self._print(Message.INFO, '{:>{}} {:<{}}  {:<{}}{:<{}}  {:>{}} {:>{}}'.format('address',  address_len,
+                                                                                          'function', name_len,
+                                                                                          section,    section_len,
+                                                                                          'file',     file_len,
+                                                                                          'fsize',    size_len,
+                                                                                          'tsize',    total_len))
 
         self.stacktable.sort()
 
@@ -971,6 +982,7 @@ class Stacklimit:
             if self._regard_function(function):
                 address = self._bold('{:#0{width}x}'.format(function.address, width=address_len))
                 name = self._func('{:{width}}'.format(function.name, width=name_len))
+                section = ''
                 file = function.file if function.file else ''
                 file = self._dark('{:{width}}'.format(file, width=file_len))
                 size = '{:{width}}'.format(function.size, width=size_len)
@@ -980,7 +992,12 @@ class Stacklimit:
                 total_prefix_len = total_len - int(log(function.total + 1, 10).real) - 1
                 total = '{:>{width}}{}'.format(imprecise, total, width=total_prefix_len)
 
-                self._print(Message.INFO, '{} {}  {}  {} {}'.format(address, name, file, size, total))
+                if show_section:
+                    section = function.section if function.section else ''
+                    section = self._dark('{:{width}}'.format(section, width=section_len))
+                    section = section + ' '
+
+                self._print(Message.INFO, '{} {}  {}{}  {} {}'.format(address, name, section, file, size, total))
 
     def print_call_tree(self):
         for top in self.stacktable:
@@ -1006,14 +1023,16 @@ def main():
                         help='the architecture of the target platform')
     parser.add_argument('-c', '--no-color', action='store_true',
                         help='suppress color')
-    parser.add_argument('--header', action='store_true',
-                        help='show header line')
     parser.add_argument('-o', '--objdump',
                         help='path to or name of the objdump')
     parser.add_argument('-r', '--regard-all', action='store_true',
                         help='regard initialization and termination code')
     parser.add_argument('-s', '--summary', action='store_true',
                         help='only print the maximum stack size')
+    parser.add_argument('--show-header', action='store_true',
+                        help='show header line')
+    parser.add_argument('--show-section', action='store_true',
+                        help='show section column')
     parser.add_argument('-t', '--tree', action='store_true',
                         help='show function call tree')
     parser.add_argument('-w', '--no-duplicated-warnings', action='store_true',
@@ -1049,7 +1068,7 @@ def main():
         elif args.tree:
             sl.print_call_tree()
         else:
-            sl.print_stack_table(args.header)
+            sl.print_stack_table(args.show_header, args.show_section)
     except KeyboardInterrupt:
         exit(130)
 
