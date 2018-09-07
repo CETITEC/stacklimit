@@ -102,6 +102,9 @@ class Pattern:
     # dir/binary:     file format elf64-x86-64
     FileFormat = '^.*:( |\t)*file format '
 
+    # Disassembly of section .text:
+    Section = '^Disassembly of section .*:'
+
     # 000000000040076d <main>:
     Function = '^[0-9a-f]* \<.*\>:$'
 
@@ -118,6 +121,13 @@ class Pattern:
         name = ' '.join(line_array[1:])[1:-2]
 
         return address, name
+
+    @staticmethod
+    def get_section(line):
+        line_array = line.split(' ')
+        name = line_array[-1][0:-1]
+
+        return name
 
 
 # ARM and Thumb instruction set
@@ -322,14 +332,14 @@ class Stack:
         returns = None
         visited = False
         # lock = False
-        # TODO: Save the section and show only function in .text and which are not in os_functions
-        # section = None
+        section = None
 
-        def __init__(self, address=None, name=None, file=None, size=0):
+        def __init__(self, address=None, name=None, section=None, file=None, size=0):
             self.address = address
             if len(name) > MAX_NAME_LEN:
                 name = name[:MAX_NAME_LEN - 3] + '...'
             self.name = name
+            self.section = section
             self.file = file
             self.size = size
             self.calls = Stack.Table([])
@@ -709,7 +719,13 @@ class Stacklimit:
             self._print(Message.DEBUG, '...', prefix=False)
 
     def _regard_function(self, function):
-        return function.address != 0 and (self.regard_os_functions or function.name not in Pattern.os_functions)
+        if function.address == 0:
+            return False
+
+        if self.regard_os_functions:
+            return True
+
+        return function.section == '.text' and function.name not in Pattern.os_functions
 
     def _handle_dynamic(self, callstack):
         current = callstack[-1]
@@ -824,6 +840,7 @@ class Stacklimit:
 
         objdump_cmd = [self.objdump_path, '-d', binary]
         objdump = subprocess.Popen(objdump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        section = None
 
         for line in objdump.stdout:
             line = line.decode('utf-8')[:-1]
@@ -833,14 +850,20 @@ class Stacklimit:
                 path = line_array[0][:-1]
                 file = path.split('/')[-1]
 
+            if re.match(pattern.Section, line):
+                section = pattern.get_section(line)
+                self._print(Message.DEBUG)
+                self._print(Message.DEBUG, 'Disassembly of section {}:'.format(section))
+
             elif re.match(pattern.Function, line):
                 (address, name) = pattern.get_function(line)
                 current = self.stacktable.find(address)
 
                 if current:
                     current.file = file
+                    current.section = section
                 else:
-                    current = self.stacktable.append(Stack.Function(address=address, name=name, file=file))
+                    current = self.stacktable.append(Stack.Function(address=address, name=name, section=section, file=file))
 
                 current.visited = True
                 self._print(Message.DEBUG, '{}:'.format(name))
