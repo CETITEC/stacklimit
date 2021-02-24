@@ -2,7 +2,7 @@
 """
 Determines the maximum stack size of a binary program using the ELF format.
 
-@author Mortiz Lüdecke (CETITEC)
+@author Moritz Luedecke (CETITEC)
 """
 
 import argparse
