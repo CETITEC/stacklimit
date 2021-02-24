@@ -7,40 +7,13 @@ Determines the maximum stack size of a binary program using the ELF format.
 
 import argparse
 from cmath import log
-import os
+from os import listdir, environ
+from os.path import isfile
 import re
 import subprocess
 
-PATH = ['.'] + os.environ["PATH"].split(':')
-ARCHITECTURES = [
-    # TODO: 'arm64',
-    'x86', 'i386', 'i486', 'i586', 'i686',
-    'x86_64',
-]
-OS_FUNCTIONS = [
-    'register_tm_clones',
-    'deregister_tm_clones',
-    'frame_dummy',
-    '_init',
-    '_start',
-    '_fini',
-    '__libc_csu_init',
-    '__libc_csu_fini',
-    '__init_array_start',
-    '__init_array_end',
-    '__do_global_dtors_aux',
-    '__do_global_dtors_aux_fini_array_entry',
-    '__frame_dummy_init_array_entry',
-]
-
-
-def get_tool_path(tool):
-    for dir in PATH:
-        path = dir + '/' + tool
-        if os.path.isfile(path):
-            return path
-
-    return None
+PATH = [path + '/' for path in ['.'] + environ["PATH"].split(':')]
+MAX_NAME_LEN=64
 
 
 def get_arch(arch):
@@ -49,10 +22,30 @@ def get_arch(arch):
 
     arch = arch.lower().replace('-', '_')
 
-    if arch in ARCHITECTURES:
-        return arch
+    for supported_arch in Pattern.arch:
+        if arch == supported_arch:
+            return arch
+
+        # To match also '80386' as x86 architecture
+        if supported_arch[0] == 'x':
+            temp = supported_arch[1:]
+            if temp in arch and temp[-1] == arch[-1]:
+                return supported_arch
 
     return None
+
+
+# instruction [reg1[, reg2[, reg3 [...]]]]
+def _operation(*args):
+    op = '.*( |\t)+{}'.format(args[0])
+
+    if len(args) > 1:
+        op = '{}( |\t)+{}'.format(op, args[1])
+
+    for arg in args[2:]:
+        op = '{},( |\t)+{}'.format(op, arg)
+
+    return op
 
 
 class Color:
@@ -81,6 +74,200 @@ class Message:
     ERROR = MessageType('Error: ', Color.RED)
     INFO = MessageType()
     WARN = MessageType('Warning: ', Color.PURPLE)
+
+
+class Pattern:
+    arch = ['arm', 'aarch64',
+            'x86', 'x86_64']
+    os_functions = [
+        'register_tm_clones',
+        'deregister_tm_clones',
+        'frame_dummy',
+        'call_weak_fn',
+        'abort@plt',
+        '.plt',
+        '_init',
+        '_start',
+        '_fini',
+        '__libc_csu_init',
+        '__libc_csu_fini',
+        '__init_array_start',
+        '__init_array_end',
+        '__do_global_dtors_aux',
+        '__do_global_dtors_aux_fini_array_entry',
+        '__frame_dummy_init_array_entry',
+        '__libc_start_main@plt',
+        '__gmon_start__@plt']
+
+    # dir/binary:     file format elf64-x86-64
+    FileFormat = '^.*:( |\t)*file format '
+
+    # Disassembly of section .text:
+    Section = '^Disassembly of section .*:'
+
+    # 000000000040076d <main>:
+    Function = '^[0-9a-f]* \<.*\>:$'
+
+    FunctionCall = None
+    FunctionPointer = None
+    StackDynamicOp = None
+    StackPushOp = None
+    StackSubOp = None
+
+    @staticmethod
+    def get_function(line):
+        line_array = line.split(' ')
+        address = int(line_array[0], 16)
+        name = ' '.join(line_array[1:])[1:-2]
+
+        return address, name
+
+    @staticmethod
+    def get_section(line):
+        line_array = line.split(' ')
+        name = line_array[-1][0:-1]
+
+        return name
+
+
+# ARM and Thumb instruction set
+class arm(Pattern):
+    arch = ['arm']
+
+    #   1069c:   ebffff80        bl      104a4 <func_alpha>
+    # TODO: Test cbz and cbnz
+    FunctionCall = '(' + _operation('(b[a-z]{2}|blx|bl|b)(.n|)', '[0-9]+') \
+                 + '|' + _operation('(cbz|cbnz)',                '[a-z]([a-z]|[0-9]+)', '[0-9]+') \
+                 + ')'
+
+    #   1031c:   e12fff13    bx  r3
+    #   10344:   012fff1e    bxeq    lr
+    #   10918:   e12fff33    blx r3
+    FunctionPointer = '(' + _operation('(bx[a-z]{2}|bxj|blx|bx)', '[a-z]([a-z]|[0-9]+)') \
+                    + '|' + _operation('bne(.w|w|s|)',            '(0x[0-9a-f]+|[0-9]+)') \
+                    + ')'
+
+    # TODO: Test stm*
+    # TODO: push{cond}
+    StackPushOp = '(' + _operation('push(|[a-z]{2})') \
+                + '|' + _operation('stm(ia|ib|da|db)(.w|w|s|)', 'sp') \
+                + ')'
+
+    #   ad5e0a:   b0f8        sub   sp,  #480
+    #   ad7620:   b093        sub   sp,  #76
+    #   a31760:   e24dd01c    sub   sp,  sp, #28
+    #   a31760:   e24dd01c    add   sp,  sp, #-28
+    #   ad6e4e:   f5ad7d21    sub.w sp,  sp, #644
+    #      4bc:   a9bc7bfd    stp   x29, x30, [sp,#-64]!
+    #      894:   a9af7bfd    stp   x29, x30, [sp,#-272]!
+    #     4610:   f81d0ffe    str        x30, [sp, #-48]!
+    StackSubOp = '(' + _operation('stp', 'x[0-9]+', '[a-z]([a-z]|[0-9]+)', '\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]') \
+               + '|' + _operation('str(.w|w|s|)',   '[a-z]([a-z]|[0-9]+)', '\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]') \
+               + '|' + _operation('sub(.w|w|s|)',   'sp',                  'sp',            '\#(0x[0-9a-f]|[0-9]+)') \
+               + '|' + _operation('add(.w|w|s|)',   'sp',                  'sp',            '\#-(0x[0-9a-f]|[0-9]+)') \
+               + ')'
+
+    @staticmethod
+    def get_function_call(line):
+        name = line.split('<')[1]
+        name = name.split('>')[0]
+
+        line = line.split(' <')[0]
+        line = line.replace('\t', ' ')
+        line = line.replace('  ', ' ')
+        line_array = line.split(' ')
+        address = int(line_array[-1], 16)
+
+        return address, name
+
+    @staticmethod
+    def get_stack_push_count(line):
+        # TODO: push {r0,r4-r7}
+        temp = line.split('{')[-1]
+        temp = temp.split('}')[0]
+        return temp.count(',') + 1
+
+    @staticmethod
+    def get_stack_push_size(line):
+        return 4 * arm.get_stack_push_count(line)
+
+    @staticmethod
+    def get_stack_sub_size(line):
+        temp = line.split('#')[-1]
+        temp = temp.split('\n')[0]
+        temp = temp.split('\t')[0]
+        temp = temp.split(' ')[0]
+        if temp[0] == '-':
+            temp = temp[1:]
+        return temp
+
+
+class aarch64(arm):
+    arch = ['aarch64']
+
+    @staticmethod
+    def get_stack_push_size(line):
+        return 8 * arm.get_stack_push_count(line)
+
+    @staticmethod
+    def get_stack_sub_size(line):
+        temp = line.split('#')[-1]
+        temp = temp.split(']')[0]
+        if temp[0] == '-':
+            temp = temp[1:]
+        return temp
+
+
+class x86(Pattern):
+    arch = ['x86']
+
+    #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
+    FunctionCall = '^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  [0-9a-f]+ \<.*\>$'
+
+    #   400804:   ff d0                   callq  *%rax
+    FunctionPointer = '^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  .*%.*$'
+
+    #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
+    #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
+    StackDynamicOp = '.*( |\t)+sub( |\t)+\%.*,\%(e|r)sp$'
+
+    #   4004c3:   55                      push   %esp
+    #   4004c3:   55                      push   %rsp
+    StackPushOp = '.*( |\t)+push(l|)( |\t)+'
+
+    #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
+    StackSubOp = '.*( |\t)+sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$'
+
+    @staticmethod
+    def get_function_call(line):
+        line = line.replace('\t', ' ')
+        line = line.replace('  ', ' ')
+        line_array = line.split(' ')
+        address = int(line_array[-2], 16)
+        name = line_array[-1][1:-1]
+
+        return address, name
+
+    @staticmethod
+    def get_stack_push_size(line):
+        return 4
+
+    @staticmethod
+    def get_stack_sub_size(line):
+        temp = line.split(' ')[-1]
+        return temp.split(',')[0][1:]
+
+
+class x86_64(x86):
+    arch = ['x86_64']
+
+    #   4004c3:   55                      push   %esp
+    #   4004c3:   55                      pushq  %rbp
+    StackPushOp = '.*( |\t)+push(q|)( |\t)+'
+
+    @staticmethod
+    def get_stack_push_size(line):
+        return 8
 
 
 class Visitor:
@@ -145,10 +332,14 @@ class Stack:
         returns = None
         visited = False
         # lock = False
+        section = None
 
-        def __init__(self, address=None, name=None, file=None, size=0):
+        def __init__(self, address=None, name=None, section=None, file=None, size=0):
             self.address = address
+            if len(name) > MAX_NAME_LEN:
+                name = name[:MAX_NAME_LEN - 3] + '...'
             self.name = name
+            self.section = section
             self.file = file
             self.size = size
             self.calls = Stack.Table([])
@@ -186,6 +377,10 @@ class Stack:
         def __contains__(self, item):
             return self.find(item.address)
 
+        def __delitem__(self, key):
+            index = self.table.index(key)
+            del(self.table[index])
+
         def __getitem__(self, item):
             return self.table.__getitem__(item)
 
@@ -208,6 +403,7 @@ class Stack:
             self.table.append(function)
             return function
 
+        # FIXME: This doesn't work for arm, because there are multiple system functions which has the address 0x0
         def find(self, address):
             for function in self.table:
                 if address == function.address:
@@ -241,15 +437,14 @@ class Stacklimit:
 
     regard_os_functions = None
 
-    tools = {
-        'objdump':       None,
-        'readelf':       None,
-    }
+    readelf_path = None
+    # TODO: Add support for llvm-objdump
+    objdump_path = None
 
     stacktable = None
 
     def __init__(self, debug=False, warn=True, quiet=False, color=False, multiple_warn=True, regard_os_functions=True,
-                 arch=None, binary=None, objdump=None):
+                 arch=None, objdump=None, binary=None):
         self.debug = debug
         self.color = color
         self.quiet = quiet
@@ -261,17 +456,11 @@ class Stacklimit:
         self.regard_os_functions = regard_os_functions
         self.stacktable = Stack.Table([Stack.Function(address=0, name='Function Pointer')])
 
-        # TODO: Specific objdump for local installs or objdump for other platforms...
+        self.readelf_path = self._get_tool_path('readelf')
+        self._init_arch(arch, binary)
+        self._init_objdump(binary, objdump)
 
-        for tool in self.tools:
-            self.tools[tool] = get_tool_path(tool)
-
-            if self.tools[tool] is None:
-                self._print(Message.ERROR, 'Couldn\'t find \'' + tool + '\'')
-                raise ValueError()
-
-            self._print(Message.DEBUG, '\'' + self._bold(tool) + '\' located in \'' + self._bold(self.tools[tool]) + '\'')
-
+    def _init_arch(self, arch, binary):
         if not arch:
             self._print(Message.DEBUG, 'Determinate platform from binary...')
             arch = self._get_arch(binary)
@@ -282,24 +471,35 @@ class Stacklimit:
                                            'to define the platform.')
                 raise ValueError()
 
-        if arch not in ARCHITECTURES:
+        if arch not in Pattern.arch:
             self._print(Message.ERROR, 'Unsupported platform \'' + arch + '\'.\n'
                                        'Supported platforms are: ', end='')
-            for arch in ARCHITECTURES[:-2]:
-                print(arch, end=', ')
-            print(ARCHITECTURES[-2] + ' and ' + ARCHITECTURES[-1] + '.\n')
+            for arch in Pattern.arch[:-2]:
+                self._print(Message.INFO, arch, end=', ', prefix='')
+            self._print(Message.INFO, Pattern.arch[-2] + ' and ' + Pattern.arch[-1] + '.\n', prefix='')
             raise ValueError()
 
         self._print(Message.DEBUG, 'Using architecture ' + self._bold(arch))
         self.arch = arch
 
-        self._print(Message.DEBUG, 'Determinate objdump support for architecture ' + self._bold(arch) + '...')
+    def _init_objdump(self, binary, objdump=None):
+        self._print(Message.DEBUG, 'Determinate objdump support for architecture ' + self._bold(self.arch) + '...')
 
-        if not self._has_objdmup_support(binary):
-            self._print(Message.ERROR, 'Your objdump doesn\'t support the architecture ' + self._bold(arch) + '.\n'
-                                       'Use \'' + self._bold('-o') + '\' or \'' + self._bold('--objdump') + '\''
-                                       'to specify the objdump binary.')
+        if objdump:
+            self.objdump_path = self._get_tool_path(objdump)
+            supported = self._has_objdump_support(binary)
+        else:
+            supported = self._find_objdump(binary)
+
+        if not supported:
+            self._print(Message.ERROR,
+                        'Your objdump doesn\'t support the architecture ' + self._bold(self.arch) + '.')
+            if not objdump:
+                self._print(Message.ERROR, 'Use \'' + self._bold('-o') + '\' or \'' + self._bold('--objdump') + '\''
+                                           'to specify the objdump binary.', prefix='')
             raise ValueError()
+
+        self._print(Message.DEBUG, 'Using \'' + self._bold(self.objdump_path) + '\'')
 
     def _bold(self, msg):
         if self.color:
@@ -319,15 +519,76 @@ class Stacklimit:
         else:
             return msg
 
+    def _find_objdump(self, binary):
+        objdumps = [dir + file for dir in PATH for file in listdir(dir) if file.endswith('objdump')]
+
+        self._print(Message.DEBUG, 'Search compatible objdump...')
+
+        for objdump in objdumps:
+            cmd = [objdump, '--version']
+            output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                                      ).communicate()[0].decode('utf-8')
+
+            if output == '':
+                self._print(Message.DEBUG, 'Couldn\'t get version from \'' + self._bold(objdump) + '\'.')
+                continue
+
+            origin = output.split(' ')[0]
+            # Add support for llvm-objdump
+            if origin == 'GNU' and self._has_objdump_support(binary, objdump):
+                self.objdump_path = objdump
+                return True
+
+            self._print(Message.DEBUG, '\'' + self._bold(objdump) + '\' doesn\'t support arch.')
+
+        return False
+
     def _get_arch(self, binary):
+        arch = self._get_arch_with_readelf(binary)
+        if not arch:
+            # Since the initramfs is not really an ELF file we have to use objdump
+            arch = self._get_arch_with_objdump(binary)
+
+        if not arch:
+            self._print(Message.DEBUG, 'Maybe the binary is not an ELF file.')
+
+        return arch
+
+    def _get_arch_with_objdump(self, binary):
         if not binary:
             return None
 
-        cmd = [self.tools['readelf'], '-h', binary]
+        if not self._find_objdump(binary):
+            return None
+
+        cmd = [self.objdump_path, '-a', binary]
         output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 
         if output == '':
-            self._print(Message.DEBUG, 'Couldn\'t read binary with readelf. Maybe the binary is not an ELF file.')
+            self._print(Message.DEBUG, 'Couldn\'t read binary with objdump.')
+            return None
+
+        output_array = output.split('file format ')
+
+        if len(output_array) < 2:
+            self._print(Message.DEBUG, 'Couldn\'t find \'' + self._bold('file format') + '\' in output of objdump. '
+                                       'Maybe the syntax has changed.')
+            return None
+
+        output = output_array[1]
+        output = output.split('\n')[0]
+
+        return get_arch(output)
+
+    def _get_arch_with_readelf(self, binary):
+        if not binary:
+            return None
+
+        cmd = [self.readelf_path, '-h', binary]
+        output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
+
+        if output == '':
+            self._print(Message.DEBUG, 'Couldn\'t read binary with readelf.')
             return None
 
         output_array = output.split('Machine:')
@@ -343,25 +604,26 @@ class Stacklimit:
 
         return get_arch(output)
 
-    def _has_objdmup_support(self, binary):
+    def _get_tool_path(self, tool):
+        for dir in [''] + PATH:
+            path = dir + tool
+            if isfile(path):
+                return path
+
+        self._print(Message.ERROR, 'Couldn\'t find \'' + self._bold(tool) + '\'')
+        raise ValueError()
+
+    def _has_objdump_support(self, binary, objdump=None):
         if not binary:
             return False
 
-        cmd = [self.tools['objdump'], '-f', binary]
-        output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-        output_array = output.split('architecture:')
+        if not objdump:
+            objdump = self.objdump_path
 
-        if len(output_array) < 2:
-            self._print(Message.DEBUG, 'Couldn\'t find \'' + self._bold('architecture') + '\' in output of objdump. '
-                                       'Maybe the syntax has changed.')
-            return False
+        cmd = [objdump, '-d', '--stop-address=0', binary]
+        returncode = subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        output = output_array[1]
-        output = output.split(', ')[0]
-        output = output.split(':')[-1]
-        arch = get_arch(output)
-
-        return arch is not None
+        return returncode == 0
 
     def _print(self, kind, *objects, sep=' ', end='\n', prefix=True):
         if kind is Message.DEBUG:
@@ -441,7 +703,7 @@ class Stacklimit:
         if self.multiple_warn:
             self._print(Message.WARN, 'Found cycle in call graph entering with \'' + self._func(current.name) + '\'')
         else:
-            self._print(Message.WARN, 'Found cycle in call graph')
+            self._print(Message.WARN, 'Found cycles in call graph')
 
         if self.debug and self.warn_cycle:
             path_string = [self._func(call.name) for call in callstack]
@@ -457,30 +719,44 @@ class Stacklimit:
             self._print(Message.DEBUG, '...', prefix=False)
 
     def _regard_function(self, function):
-        return function.address != 0 and (self.regard_os_functions or function.name not in OS_FUNCTIONS)
+        if function.address == 0:
+            return False
+
+        if self.regard_os_functions:
+            return True
+
+        return function.section == '.text' and function.name not in Pattern.os_functions
 
     def _handle_dynamic(self, callstack):
         current = callstack[-1]
 
+        if not current.dynamic:
+            return
+
         for node in callstack[:-1]:
             node.imprecise = True
 
-        if self.warn_dynamic and current.dynamic and self._regard_function(current):
+        if self.warn_dynamic:
             self.warn_dynamic = self.multiple_warn
-            self._print(Message.WARN, 'Dynamic stack operation in function \'' + self._func(current.name) + '\'')
+            if self.multiple_warn:
+                self._print(Message.WARN, 'Dynamic stack operation in function \'' + self._func(current.name) + '\'')
+            else:
+                self._print(Message.WARN, 'Found dynamic stack operations')
 
     def _handle_function_pointer(self, callstack):
         current = callstack[-1]
 
+        if not [child for child in current.calls if child.address == 0]:
+            return
+
         for node in callstack[:-1]:
             node.imprecise = True
-
-        if self.warn_fp and [child for child in current.calls if child.address == 0] and self._regard_function(current):
+        if self.warn_fp:
             self.warn_fp = self.multiple_warn
             if self.multiple_warn:
                 self._print(Message.WARN, 'Function \'' + self._func(current.name) + '\' calls a function pointer')
             else:
-                self._print(Message.WARN, 'Found a function pointer')
+                self._print(Message.WARN, 'Found function pointers')
 
     def _handle_cycle(self, callstack):
         current = callstack[-1]
@@ -510,8 +786,10 @@ class Stacklimit:
         if current.visited:
             return False
 
-        self._handle_dynamic(callstack)
-        self._handle_function_pointer(callstack)
+        if self._regard_function(current):
+            self._handle_dynamic(callstack)
+            self._handle_function_pointer(callstack)
+
         return self._handle_cycle(callstack)
 
     def calculate_stack(self):
@@ -546,64 +824,67 @@ class Stacklimit:
         return True
 
     def parse(self, binary):
-        # TODO: Use arch for autodetecting architecture and check with the right objdump version
-        arch = None
         current = None
         file = None
 
-        objdump_cmd = [self.tools['objdump'], '-d', binary]
+        if self.arch in aarch64.arch:
+            pattern = aarch64
+        elif self.arch in arm.arch:
+            pattern = arm
+        elif self.arch in x86.arch:
+            pattern = x86
+        elif self.arch in x86_64.arch:
+            pattern = x86_64
+        else:
+            return
+
+        objdump_cmd = [self.objdump_path, '-d', binary]
         objdump = subprocess.Popen(objdump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        section = None
 
         for line in objdump.stdout:
             line = line.decode('utf-8')[:-1]
 
-            # Binary file and architecture, e.g.
-            #
-            # dir/binary:     file format elf64-x86-64
-            if re.match('^.*:( |\t)*file format ', line):
+            if re.match(pattern.FileFormat, line):
                 line_array = line.split(' ')
-                arch = line_array[-1]
                 path = line_array[0][:-1]
                 file = path.split('/')[-1]
 
-            # New functions, e.g.
-            #
-            # 000000000040076d <main>:
-            elif re.match('^[0-9a-f]* \<.*\>:$', line):
-                line_array = line.split(' ')
-                address = int(line_array[0], 16)
-                name = line_array[1][1:-2]
+            if re.match(pattern.Section, line):
+                section = pattern.get_section(line)
+                self._print(Message.DEBUG)
+                self._print(Message.DEBUG, 'Disassembly of section {}:'.format(section))
 
+            elif re.match(pattern.Function, line):
+                (address, name) = pattern.get_function(line)
                 current = self.stacktable.find(address)
 
                 if current:
                     current.file = file
+                    current.section = section
                 else:
-                    current = self.stacktable.append(Stack.Function(address=address, name=name, file=file))
+                    current = self.stacktable.append(Stack.Function(address=address, name=name, section=section, file=file))
 
-            # Push stack operations, e.g.
-            #
-            #   4004c3:   55                      push   %esp
-            #   4004c3:   55                      push   %rsp
-            elif re.match('.*(push)( |\t)+\%(e|r)sp$', line):
-                register = line[-3]
+                current.visited = True
+                self._print(Message.DEBUG, '{}:'.format(name))
 
-                # 32 bit register
-                if register == 'e':
-                    current.size += 4
-                # 64 bit register
-                elif register == 'r':
-                    current.size += 8
+            elif pattern.StackPushOp and re.match(pattern.StackPushOp, line):
+                self._print(Message.DEBUG, '  StackPushOp    ', line)
+                size = pattern.get_stack_push_size(line)
+                current.size += size
 
-            # Static stack operations, e.g.
-            #
-            #  (4003e5:   55                      push   %rbp)
-            #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
-            # Note: We ignore all 'add' operations. We only interested in 'sub'.
-            elif re.match('.*sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$', line):
-                temp = line.split(' ')[-1]
-                temp = temp.split(',')[0][1:]
-                size = int(temp, 16)
+            # Note: We ignore all 'add' operations. We're only interested in 'sub'.
+            elif pattern.StackSubOp and re.match(pattern.StackSubOp, line):
+                self._print(Message.DEBUG, '  StackSubOp     ', line)
+                temp = pattern.get_stack_sub_size(line)
+                if temp[:2] == '0x':
+                    size = int(temp, 16)
+                else:
+                    size = int(temp)
+
+                # TODO: Rewrite this
+                if size > 0xf000000000000000:
+                    continue
 
                 if size > 0xf0000000:
                     size = -size
@@ -615,21 +896,13 @@ class Stacklimit:
 
                 current.size += size
 
-            # Dynamic stack operations, e.g.
-            #
-            #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
-            #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
-            elif re.match('.*sub( |\t)+\%.*,\%(e|r)sp$', line):
+            elif pattern.StackDynamicOp and re.match(pattern.StackDynamicOp, line):
                 current.dynamic = True
 
-            # Function call, e.g.
-            #
-            #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
-            elif re.match('^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  [0-9a-f]+ \<.*\>$', line):
-                line_array = line.split(' ')
-                address = int(line_array[-2], 16)
-                name = line_array[-1][1:-1]
+            elif pattern.FunctionCall and re.match(pattern.FunctionCall, line):
+                self._print(Message.DEBUG, '  FunctionCall   ', line)
 
+                (address, name) = pattern.get_function_call(line)
                 function = self.stacktable.find(address)
 
                 if not function:
@@ -639,47 +912,69 @@ class Stacklimit:
                     current.calls.append(function)
                     function.returns.append(current)
 
-            # Function pointer call, e.g.
-            #
-            #   400804:   ff d0                   callq  *%rax
-            elif re.match('^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  .*%.*$', line):
+            elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
+                self._print(Message.DEBUG, '  FunctionPointer', line)
+
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
 
+        for function in [function for function in self.stacktable if not function.visited and function.address != 0]:
+            address = self._bold(hex(function.address))
+            name = self._func(function.returns[0].name)
+            self._print(Message.DEBUG, 'Ignore inner FunctionCall in {} to {} ({})'.format(name,
+                                                                                           address,
+                                                                                           function.name))
+            del(self.stacktable[function])
+            for caller in function.returns:
+                del(caller.calls[function])
+
+        for function in self.stacktable:
+            function.visited = False
+
     def get_stack_limit(self):
         return self.stacktable.limit()
 
-    # TODO: Print also '>' for imprecise functions
-    def print_stack_table(self, header=False):
+    def print_stack_table(self, show_header=False, show_section=False):
         # Should never happen
         if not self.stacktable:
             return
 
-        address_len = 0xfffff if header else 1
-        name_len = 8 if header else 1
-        file_len = 4 if header else 1
-        size_len = 99999 if header else 1
-        total_len = 99999 if header else 1
+        address_len = 0xfffff if show_header else 1
+        name_len = 8 if show_header else 1
+        section_len = 7 if show_header else 1
+        file_len = 4 if show_header else 1
+        size_len = 99999 if show_header else 1
+        # This is correct! The length is increment by one later
+        total_len = 9999 if show_header else 1
 
         for function in self.stacktable:
             address_len = max(function.address, address_len)
             name_len = max(len(function.name), name_len)
             if function.file:
                 file_len = max(len(function.file), file_len)
+            if show_section and function.section:
+                section_len = max(len(function.section), section_len)
             size_len = max(function.size, size_len)
             total_len = max(function.total, total_len)
 
         address_len = int(log(address_len, 16).real + 3)
         size_len = int(log(size_len, 10).real + 1)
-        total_len = int(log(total_len, 10).real + 1)
+        # Increment the length for the imprecise symbol
+        total_len = int(log(total_len, 10).real + 1) + 1
 
-        if header:
-            print('{:>{}} {:<{}}  {:<{}}  {:>{}} {:>{}}'.format('address',  address_len,
-                                                                'function', name_len,
-                                                                'file',     file_len,
-                                                                'fsize',    size_len,
-                                                                'tsize',    total_len))
+        if show_header:
+            section = 'section '
+            if not show_section:
+                section = ''
+                section_len = 0
+
+            self._print(Message.INFO, '{:>{}} {:<{}}  {:<{}}{:<{}}  {:>{}} {:>{}}'.format('address',  address_len,
+                                                                                          'function', name_len,
+                                                                                          section,    section_len,
+                                                                                          'file',     file_len,
+                                                                                          'fsize',    size_len,
+                                                                                          'tsize',    total_len))
 
         self.stacktable.sort()
 
@@ -687,11 +982,22 @@ class Stacklimit:
             if self._regard_function(function):
                 address = self._bold('{:#0{width}x}'.format(function.address, width=address_len))
                 name = self._func('{:{width}}'.format(function.name, width=name_len))
+                section = ''
                 file = function.file if function.file else ''
                 file = self._dark('{:{width}}'.format(file, width=file_len))
                 size = '{:{width}}'.format(function.size, width=size_len)
-                total = self._bold('{:{width}}'.format(function.total, width=total_len))
-                print('{} {}  {}  {} {}'.format(address, name, file, size, total))
+                # Workaround for text with color
+                total = self._bold(str(function.total))
+                imprecise = '>' if function.imprecise else ' '
+                total_prefix_len = total_len - int(log(function.total + 1, 10).real) - 1
+                total = '{:>{width}}{}'.format(imprecise, total, width=total_prefix_len)
+
+                if show_section:
+                    section = function.section if function.section else ''
+                    section = self._dark('{:{width}}'.format(section, width=section_len))
+                    section = section + ' '
+
+                self._print(Message.INFO, '{} {}  {}{}  {} {}'.format(address, name, section, file, size, total))
 
     def print_call_tree(self):
         for top in self.stacktable:
@@ -717,15 +1023,16 @@ def main():
                         help='the architecture of the target platform')
     parser.add_argument('-c', '--no-color', action='store_true',
                         help='suppress color')
-    parser.add_argument('--header', action='store_true',
-                        help='show header line')
-    # TODO: Specific objdump for local installs or objdump for other platforms...
-    # parser.add_argument('-o', '--objdump',
-    #                     help='path to or name of the objdump')
+    parser.add_argument('-o', '--objdump',
+                        help='path to or name of the objdump')
     parser.add_argument('-r', '--regard-all', action='store_true',
                         help='regard initialization and termination code')
     parser.add_argument('-s', '--summary', action='store_true',
                         help='only print the maximum stack size')
+    parser.add_argument('--show-header', action='store_true',
+                        help='show header line')
+    parser.add_argument('--show-section', action='store_true',
+                        help='show section column')
     parser.add_argument('-t', '--tree', action='store_true',
                         help='show function call tree')
     parser.add_argument('-w', '--no-duplicated-warnings', action='store_true',
@@ -743,10 +1050,10 @@ def main():
     warn = not args.no_warnings
     mult_warn = not args.no_duplicated_warnings
     color = not args.no_color
-    
+
     try:
         sl = Stacklimit(args.debug, warn, args.quiet, color, mult_warn, args.regard_all,
-                        args.arch, args.binary.name)
+                        args.arch, args.objdump, args.binary.name)
     except ValueError:
         exit(1)
 
@@ -761,7 +1068,7 @@ def main():
         elif args.tree:
             sl.print_call_tree()
         else:
-            sl.print_stack_table(args.header)
+            sl.print_stack_table(args.show_header, args.show_section)
     except KeyboardInterrupt:
         exit(130)
 
