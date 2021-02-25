@@ -20,3 +20,7 @@ classifiers = [
   "Topic :: Software Development :: Memory"
 ]
 
+style = [
+  "black"
+]
+

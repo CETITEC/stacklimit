@@ -39,3 +39,9 @@ Requirements
 * **objdump** (gcc)
 * **readelf**
 
+
+Development
+-----------
+
+Tools:
+* [black](https://pypi.org/project/black): code formatter
