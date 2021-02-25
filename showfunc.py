@@ -6,27 +6,27 @@ Print selected lines from objdump
 """
 
 import argparse
-from os import listdir, environ
-from os.path import isfile
 import re
 import subprocess
+from os import environ, listdir
+from os.path import isfile
 
-PATH = [path + '/' for path in ['.'] + environ["PATH"].split(':')]
-MAX_NAME_LEN=64
+PATH = [path + "/" for path in ["."] + environ["PATH"].split(":")]
+MAX_NAME_LEN = 64
 
 
 def get_arch(arch):
     if not arch:
         return None
 
-    arch = arch.lower().replace('-', '_')
+    arch = arch.lower().replace("-", "_")
 
     for supported_arch in Pattern.arch:
         if arch == supported_arch:
             return arch
 
         # To match also '80386' as x86 architecture
-        if supported_arch[0] == 'x':
+        if supported_arch[0] == "x":
             temp = supported_arch[1:]
             if temp in arch and temp[-1] == arch[-1]:
                 return supported_arch
@@ -35,15 +35,15 @@ def get_arch(arch):
 
 
 class Color:
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    DARK = '\033[90m'
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    PURPLE = '\033[95m'
-    YELLOW = '\033[93m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
+    DARK = "\033[90m"
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    PURPLE = "\033[95m"
+    YELLOW = "\033[93m"
+    END = "\033[0m"
+    BOLD = "\033[1m"
 
 
 class MessageType:
@@ -56,22 +56,21 @@ class MessageType:
 
 
 class Message:
-    DEBUG = MessageType('Debug: ', Color.YELLOW)
-    ERROR = MessageType('Error: ', Color.RED)
+    DEBUG = MessageType("Debug: ", Color.YELLOW)
+    ERROR = MessageType("Error: ", Color.RED)
     INFO = MessageType()
-    WARN = MessageType('Warning: ', Color.PURPLE)
+    WARN = MessageType("Warning: ", Color.PURPLE)
 
 
 class Pattern:
-    arch = ['arm', 'aarch64',
-            'x86', 'x86_64']
+    arch = ["arm", "aarch64", "x86", "x86_64"]
 
     # dir/binary:     file format elf64-x86-64
-    FileFormat = '^.*:( |\t)*file format '
+    FileFormat = "^.*:( |\t)*file format "
 
     # 000000000040076d <main>:
     def Function(name):
-       return '^[0-9a-f]* \<' + name + '\>:$'
+        return "^[0-9a-f]* \<" + name + "\>:$"
 
 
 class ObjdumpParser:
@@ -85,34 +84,49 @@ class ObjdumpParser:
         self.debug = debug
         self.color = color
 
-        self.readelf_path = self._get_tool_path('readelf')
+        self.readelf_path = self._get_tool_path("readelf")
         self._init_arch(arch, binary)
         self._init_objdump(binary, objdump)
 
     def _init_arch(self, arch, binary):
         if not arch:
-            self._print(Message.DEBUG, 'Determinate platform from binary...')
+            self._print(Message.DEBUG, "Determinate platform from binary...")
             arch = self._get_arch(binary)
 
             if not arch:
-                self._print(Message.ERROR, 'Couldn\'t determinate platform.\n'
-                                           'Use \'' + self._bold('-a') + '\' or \'' + self._bold('--arch') + '\''
-                                           'to define the platform.')
+                self._print(
+                    Message.ERROR,
+                    "Couldn't determinate platform.\n"
+                    "Use '" + self._bold("-a") + "' or '" + self._bold("--arch") + "'"
+                    "to define the platform.",
+                )
                 raise ValueError()
 
         if arch not in Pattern.arch:
-            self._print(Message.ERROR, 'Unsupported platform \'' + arch + '\'.\n'
-                                       'Supported platforms are: ', end='')
+            self._print(
+                Message.ERROR,
+                "Unsupported platform '" + arch + "'.\n" "Supported platforms are: ",
+                end="",
+            )
             for arch in Pattern.arch[:-2]:
-                self._print(Message.INFO, arch, end=', ', prefix='')
-            self._print(Message.INFO, Pattern.arch[-2] + ' and ' + Pattern.arch[-1] + '.\n', prefix='')
+                self._print(Message.INFO, arch, end=", ", prefix="")
+            self._print(
+                Message.INFO,
+                Pattern.arch[-2] + " and " + Pattern.arch[-1] + ".\n",
+                prefix="",
+            )
             raise ValueError()
 
-        self._print(Message.DEBUG, 'Using architecture ' + self._bold(arch))
+        self._print(Message.DEBUG, "Using architecture " + self._bold(arch))
         self.arch = arch
 
     def _init_objdump(self, binary, objdump=None):
-        self._print(Message.DEBUG, 'Determinate objdump support for architecture ' + self._bold(self.arch) + '...')
+        self._print(
+            Message.DEBUG,
+            "Determinate objdump support for architecture "
+            + self._bold(self.arch)
+            + "...",
+        )
 
         if objdump:
             self.objdump_path = self._get_tool_path(objdump)
@@ -121,14 +135,26 @@ class ObjdumpParser:
             supported = self._find_objdump(binary)
 
         if not supported:
-            self._print(Message.ERROR,
-                        'Your objdump doesn\'t support the architecture ' + self._bold(self.arch) + '.')
+            self._print(
+                Message.ERROR,
+                "Your objdump doesn't support the architecture "
+                + self._bold(self.arch)
+                + ".",
+            )
             if not objdump:
-                self._print(Message.ERROR, 'Use \'' + self._bold('-o') + '\' or \'' + self._bold('--objdump') + '\''
-                                           'to specify the objdump binary.', prefix='')
+                self._print(
+                    Message.ERROR,
+                    "Use '"
+                    + self._bold("-o")
+                    + "' or '"
+                    + self._bold("--objdump")
+                    + "'"
+                    "to specify the objdump binary.",
+                    prefix="",
+                )
             raise ValueError()
 
-        self._print(Message.DEBUG, 'Using \'' + self._bold(self.objdump_path) + '\'')
+        self._print(Message.DEBUG, "Using '" + self._bold(self.objdump_path) + "'")
 
     def _bold(self, msg):
         if self.color:
@@ -149,26 +175,39 @@ class ObjdumpParser:
             return msg
 
     def _find_objdump(self, binary):
-        objdumps = [dir + file for dir in PATH for file in listdir(dir) if file.endswith('objdump')]
+        objdumps = [
+            dir + file
+            for dir in PATH
+            for file in listdir(dir)
+            if file.endswith("objdump")
+        ]
 
-        self._print(Message.DEBUG, 'Search compatible objdump...')
+        self._print(Message.DEBUG, "Search compatible objdump...")
 
         for objdump in objdumps:
-            cmd = [objdump, '--version']
-            output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                                      ).communicate()[0].decode('utf-8')
+            cmd = [objdump, "--version"]
+            output = (
+                subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                .communicate()[0]
+                .decode("utf-8")
+            )
 
-            if output == '':
-                self._print(Message.DEBUG, 'Couldn\'t get version from \'' + self._bold(objdump) + '\'.')
+            if output == "":
+                self._print(
+                    Message.DEBUG,
+                    "Couldn't get version from '" + self._bold(objdump) + "'.",
+                )
                 continue
 
-            origin = output.split(' ')[0]
+            origin = output.split(" ")[0]
             # Add support for llvm-objdump
-            if origin == 'GNU' and self._has_objdmup_support(binary, objdump):
+            if origin == "GNU" and self._has_objdmup_support(binary, objdump):
                 self.objdump_path = objdump
                 return True
 
-            self._print(Message.DEBUG, '\'' + self._bold(objdump) + '\' doesn\'t support arch.')
+            self._print(
+                Message.DEBUG, "'" + self._bold(objdump) + "' doesn't support arch."
+            )
 
         return False
 
@@ -176,33 +215,43 @@ class ObjdumpParser:
         if not binary:
             return None
 
-        cmd = [self.readelf_path, '-h', binary]
-        output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
+        cmd = [self.readelf_path, "-h", binary]
+        output = (
+            subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            .communicate()[0]
+            .decode("utf-8")
+        )
 
-        if output == '':
-            self._print(Message.DEBUG, 'Couldn\'t read binary with readelf. Maybe the binary is not an ELF file.')
+        if output == "":
+            self._print(
+                Message.DEBUG,
+                "Couldn't read binary with readelf. Maybe the binary is not an ELF file.",
+            )
             return None
 
-        output_array = output.split('Machine:')
+        output_array = output.split("Machine:")
 
         if len(output_array) < 2:
-            self._print(Message.DEBUG, 'Couldn\'t find \'' + self._bold('Machine') + '\' in output of readelf. '
-                                       'Maybe the syntax has changed.')
+            self._print(
+                Message.DEBUG,
+                "Couldn't find '" + self._bold("Machine") + "' in output of readelf. "
+                "Maybe the syntax has changed.",
+            )
             return None
 
         output = output_array[1]
-        output = output.split('\n')[0]
-        output = output.split(' ')[-1]
+        output = output.split("\n")[0]
+        output = output.split(" ")[-1]
 
         return get_arch(output)
 
     def _get_tool_path(self, tool):
-        for dir in [''] + PATH:
+        for dir in [""] + PATH:
             path = dir + tool
             if isfile(path):
                 return path
 
-        self._print(Message.ERROR, 'Couldn\'t find \'' + self._bold(tool) + '\'')
+        self._print(Message.ERROR, "Couldn't find '" + self._bold(tool) + "'")
         raise ValueError()
 
     def _has_objdmup_support(self, binary, objdump=None):
@@ -212,12 +261,14 @@ class ObjdumpParser:
         if not objdump:
             objdump = self.objdump_path
 
-        cmd = [objdump, '-d', '--stop-address=0', binary]
-        returncode = subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd = [objdump, "-d", "--stop-address=0", binary]
+        returncode = subprocess.call(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
 
         return returncode == 0
 
-    def _print(self, kind, *objects, sep=' ', end='\n', prefix=True):
+    def _print(self, kind, *objects, sep=" ", end="\n", prefix=True):
         if kind is Message.DEBUG:
             condition = self.debug
         elif kind is Message.ERROR:
@@ -233,7 +284,7 @@ class ObjdumpParser:
                     text = kind.color + kind.prefix + Color.END
                 else:
                     text = kind.prefix
-                print(text, end='')
+                print(text, end="")
             print(*objects, sep=sep, end=end)
 
     def parse(self, binary, functions):
@@ -241,11 +292,13 @@ class ObjdumpParser:
         found = False
         printSpace = False
 
-        objdump_cmd = [self.objdump_path, '-d', binary]
-        objdump = subprocess.Popen(objdump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        objdump_cmd = [self.objdump_path, "-d", binary]
+        objdump = subprocess.Popen(
+            objdump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
 
         for line in objdump.stdout:
-            line = line.decode('utf-8')[:-1]
+            line = line.decode("utf-8")[:-1]
 
             if not found:
                 for function in functions:
@@ -259,7 +312,7 @@ class ObjdumpParser:
                 if printSpace:
                     print()
 
-            if line == '':
+            if line == "":
                 printSpace = True
                 found = False
                 continue
@@ -269,26 +322,30 @@ class ObjdumpParser:
 
 def main():
     try:
-        parser = argparse.ArgumentParser(prog='stacklimit',
-                                         formatter_class=argparse.RawDescriptionHelpFormatter,
-                                         description='Show only selected assembler functions')
-        parser.add_argument('binary', type=argparse.FileType('r'),
-                            help='the binary')
-        parser.add_argument('functions', nargs='+',
-                            help='function names')
-        parser.add_argument('-a', '--arch',
-                            help='the architecture of the target platform')
-        parser.add_argument('-c', '--no-color', action='store_true',
-                            help='suppress color')
-        parser.add_argument('-o', '--objdump',
-                            help='path to or name of the objdump')
-        parser.add_argument('-d', '--debug', action='store_true',
-                            help='show debug messages')
+        parser = argparse.ArgumentParser(
+            prog="stacklimit",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="Show only selected assembler functions",
+        )
+        parser.add_argument("binary", type=argparse.FileType("r"), help="the binary")
+        parser.add_argument("functions", nargs="+", help="function names")
+        parser.add_argument(
+            "-a", "--arch", help="the architecture of the target platform"
+        )
+        parser.add_argument(
+            "-c", "--no-color", action="store_true", help="suppress color"
+        )
+        parser.add_argument("-o", "--objdump", help="path to or name of the objdump")
+        parser.add_argument(
+            "-d", "--debug", action="store_true", help="show debug messages"
+        )
 
         args = parser.parse_args()
 
         try:
-            odparser = ObjdumpParser(args.debug, not args.no_color, args.arch, args.objdump, args.binary.name)
+            odparser = ObjdumpParser(
+                args.debug, not args.no_color, args.arch, args.objdump, args.binary.name
+            )
         except ValueError:
             exit(1)
 
@@ -298,5 +355,5 @@ def main():
         exit(130)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
