@@ -45,3 +45,4 @@ Development
 
 Tools:
 * [black](https://pypi.org/project/black): code formatter
+* [isort](https://pypi.org/project/isort): imports sorter
