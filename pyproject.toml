@@ -1,0 +1,22 @@
+[project]
+name = "stacklimit"
+version = "2021.02.24"
+description = "Determines the maximum stack size of a binary program using the ELF format"
+authors = ["Moritz Luedecke <moritz.luedecke@cetitec.com>"]
+license = ""
+readme = "README.md"
+requires-python = ">=3.6"
+keywords = ["stack", "limit", "elf", "object", "binaries", "static", "analysis", "CETITEC"]
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: POSIX",
+  "Programming Language :: Python",
+  "Topic :: Software Development :: Analysis",
+  "Topic :: Software Development :: Stack",
+  "Topic :: Software Development :: Memory"
+]
+
