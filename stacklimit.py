@@ -8,6 +8,7 @@ Determines the maximum stack size of a binary program using the ELF format.
 import argparse
 import re
 import subprocess
+from abc import ABC, abstractmethod
 from cmath import log
 from os import environ, listdir
 from os.path import isfile
@@ -63,7 +64,8 @@ class Message:
     WARN = MessageType("Warning: ", Color.PURPLE)
 
 
-class Pattern:
+class Pattern(ABC):
+
     arch = ["arm", "aarch64", "x86", "x86_64"]
     os_functions = [
         "register_tm_clones",
@@ -140,6 +142,21 @@ class Pattern:
 
         return name
 
+    @staticmethod
+    @abstractmethod
+    def get_function_call(line):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_stack_push_size(line):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_stack_sub_size(line):
+        raise NotImplementedError
+
 
 # ARM and Thumb instruction set
 class arm(Pattern):
@@ -196,6 +213,7 @@ class arm(Pattern):
 
     @staticmethod
     def get_function_call(line):
+        """Implement Pattern.get_function_call."""
         name = line.split("<")[1]
         name = name.split(">")[0]
 
@@ -216,10 +234,12 @@ class arm(Pattern):
 
     @staticmethod
     def get_stack_push_size(line):
+        """Implement Pattern.get_stack_push_size."""
         return 4 * arm.get_stack_push_count(line)
 
     @staticmethod
     def get_stack_sub_size(line):
+        """Implement Pattern.get_stack_sub_size."""
         temp = line.split("#")[-1]
         temp = temp.split("\n")[0]
         temp = temp.split("\t")[0]
@@ -234,10 +254,12 @@ class aarch64(arm):
 
     @staticmethod
     def get_stack_push_size(line):
+        """Implement Pattern.get_stack_push_size."""
         return 8 * arm.get_stack_push_count(line)
 
     @staticmethod
     def get_stack_sub_size(line):
+        """Implement Pattern.get_stack_sub_size."""
         temp = line.split("#")[-1]
         temp = temp.split("]")[0]
         if temp[0] == "-":
@@ -267,6 +289,7 @@ class x86(Pattern):
 
     @staticmethod
     def get_function_call(line):
+        """Implement Pattern.get_function_call."""
         line = line.replace("\t", " ")
         line = line.replace("  ", " ")
         line_array = line.split(" ")
@@ -277,10 +300,12 @@ class x86(Pattern):
 
     @staticmethod
     def get_stack_push_size(line):
+        """Implement Pattern.get_stack_push_size."""
         return 4
 
     @staticmethod
     def get_stack_sub_size(line):
+        """Implement Pattern.get_stack_sub_size."""
         temp = line.split(" ")[-1]
         return temp.split(",")[0][1:]
 
@@ -294,6 +319,7 @@ class x86_64(x86):
 
     @staticmethod
     def get_stack_push_size(line):
+        """Implement Pattern.get_stack_push_size."""
         return 8
 
 
