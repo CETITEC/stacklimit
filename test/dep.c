@@ -37,7 +37,7 @@ int64_t __attribute__ ((noinline)) func_beta(int64_t a, int64_t b) {
 	int64_t tmp = a + b;
 
 	tmp = func_alpha(tmp);
-	
+
 	return tmp;
 }
 
