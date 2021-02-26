@@ -35,19 +35,6 @@ def get_arch(arch):
     return None
 
 
-# instruction [reg1[, reg2[, reg3 [...]]]]
-def _operation(*args):
-    op = ".*( |\t)+{}".format(args[0])
-
-    if len(args) > 1:
-        op = "{}( |\t)+{}".format(op, args[1])
-
-    for arg in args[2:]:
-        op = "{},( |\t)+{}".format(op, arg)
-
-    return op
-
-
 class Color:
     BLUE = "\033[94m"
     CYAN = "\033[96m"
@@ -115,6 +102,30 @@ class Pattern:
     StackSubOp = None
 
     @staticmethod
+    def _operation(*args):
+        """Generate a string from operations with a variable number of registers.
+
+        > instruction [reg1[, reg2[, reg3 [...]]]]
+
+        Args:
+            args (list[str]):
+                The instruction with a variable number of registers. The first element
+                is the instruction. The following elements are the registers.
+
+        Returns:
+            str: the operation
+        """
+        op = ".*( |\t)+{}".format(args[0])
+
+        if len(args) > 1:
+            op = "{}( |\t)+{}".format(op, args[1])
+
+        for arg in args[2:]:
+            op = "{},( |\t)+{}".format(op, arg)
+
+        return op
+
+    @staticmethod
     def get_function(line):
         line_array = line.split(" ")
         address = int(line_array[0], 16)
@@ -138,8 +149,8 @@ class arm(Pattern):
     # TODO: Test cbz and cbnz
     FunctionCall = (
         # fmt: off
-          "(" + _operation("(b[a-z]{2}|blx|bl|b)(.n|)", "[0-9]+")
-        + "|" + _operation("(cbz|cbnz)", "[a-z]([a-z]|[0-9]+)", "[0-9]+")
+          "(" + Pattern._operation("(b[a-z]{2}|blx|bl|b)(.n|)", "[0-9]+")
+        + "|" + Pattern._operation("(cbz|cbnz)", "[a-z]([a-z]|[0-9]+)", "[0-9]+")
         + ")"
         # fmt: on
     )
@@ -149,8 +160,8 @@ class arm(Pattern):
     #   10918:   e12fff33    blx r3
     FunctionPointer = (
         # fmt: off
-          "(" + _operation("(bx[a-z]{2}|bxj|blx|bx)", "[a-z]([a-z]|[0-9]+)")
-        + "|" + _operation("bne(.w|w|s|)", "(0x[0-9a-f]+|[0-9]+)")
+          "(" + Pattern._operation("(bx[a-z]{2}|bxj|blx|bx)", "[a-z]([a-z]|[0-9]+)")
+        + "|" + Pattern._operation("bne(.w|w|s|)", "(0x[0-9a-f]+|[0-9]+)")
         + ")"
         # fmt: on
     )
@@ -159,8 +170,8 @@ class arm(Pattern):
     # TODO: push{cond}
     StackPushOp = (
         # fmt: off
-          "(" + _operation("push(|[a-z]{2})")
-        + "|" + _operation("stm(ia|ib|da|db)(.w|w|s|)", "sp")
+          "(" + Pattern._operation("push(|[a-z]{2})")
+        + "|" + Pattern._operation("stm(ia|ib|da|db)(.w|w|s|)", "sp")
         + ")"
         # fmt: on
     )
@@ -175,10 +186,10 @@ class arm(Pattern):
     #     4610:   f81d0ffe    str        x30, [sp, #-48]!
     StackSubOp = (
         # fmt: off
-          "(" + _operation("stp", "x[0-9]+", "[a-z]([a-z]|[0-9]+)", "\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]")
-        + "|" + _operation("str(.w|w|s|)", "[a-z]([a-z]|[0-9]+)", "\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]")
-        + "|" + _operation("sub(.w|w|s|)", "sp", "sp", "\#(0x[0-9a-f]|[0-9]+)")
-        + "|" + _operation("add(.w|w|s|)", "sp", "sp", "\#-(0x[0-9a-f]|[0-9]+)")
+          "(" + Pattern._operation("stp", "x[0-9]+", "[a-z]([a-z]|[0-9]+)", "\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]")
+        + "|" + Pattern._operation("str(.w|w|s|)", "[a-z]([a-z]|[0-9]+)", "\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]")
+        + "|" + Pattern._operation("sub(.w|w|s|)", "sp", "sp", "\#(0x[0-9a-f]|[0-9]+)")
+        + "|" + Pattern._operation("add(.w|w|s|)", "sp", "sp", "\#-(0x[0-9a-f]|[0-9]+)")
         + ")"
         # fmt: on
     )
