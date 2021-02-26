@@ -1,6 +1,6 @@
 #!/bin/python3
 """
-Determines the maximum stack size of a binary program using the ELF format.
+Determine the maximum stack size of a binary program using the ELF format.
 
 @author Moritz Luedecke (CETITEC)
 """
@@ -18,6 +18,16 @@ MAX_NAME_LEN = 64
 
 
 def get_arch(arch):
+    """Determine the architecture.
+
+    Note: 80386 is recognized as x86
+
+    Args:
+        arch (str): the string to determine the architecture
+
+    Returns:
+        str: the architecture defined in Pattern.arch
+    """
     if not arch:
         return None
 
@@ -27,7 +37,7 @@ def get_arch(arch):
         if arch == supported_arch:
             return arch
 
-        # To match also '80386' as x86 architecture
+        # Match "80386" as x86
         if supported_arch[0] == "x":
             temp = supported_arch[1:]
             if temp in arch and temp[-1] == arch[-1]:
@@ -37,6 +47,8 @@ def get_arch(arch):
 
 
 class Color:
+    """ANSI color codes."""
+
     BLUE = "\033[94m"
     CYAN = "\033[96m"
     DARK = "\033[90m"
@@ -49,15 +61,30 @@ class Color:
 
 
 class MessageType:
+    """Definition of the shape of a message.
+
+    Attributes:
+        color (str):  the color of the message prefix
+        prefix (str): the prefix of the message
+    """
+
     color = None
     prefix = None
 
     def __init__(self, prefix=None, color=None):
+        """Create the object.
+
+        Args:
+            prefix (str, optional):  the prefix of the message. Defaults to None.
+            color (Color, optional): the color of the message prefix. Defaults to None.
+        """
         self.color = color
         self.prefix = prefix
 
 
 class Message:
+    """Line format for different message types."""
+
     DEBUG = MessageType("Debug: ", Color.YELLOW)
     ERROR = MessageType("Error: ", Color.RED)
     INFO = MessageType()
@@ -65,6 +92,20 @@ class Message:
 
 
 class Pattern(ABC):
+    """Contain instruction sets for different kind of calls.
+
+    Attributes:
+        arch (list[str]):         the supported architectures
+        os_functions (list[str]): OS functions, which shall be ignored
+        FileFormat (str):         regex of the file format line
+        Section (str):            regex of sections
+        Function (str):           regex of functions
+        FunctionCall (str):       regex of function calls
+        FunctionPointer (str):    regex of function pointers
+        StackDynamicOp (str):     regex of dynamic operations
+        StackPushOp (str):        regex of stack push operations
+        StackSubOp (str):         regex of substraction operators on the stack pointer
+    """
 
     arch = ["arm", "aarch64", "x86", "x86_64"]
     os_functions = [
@@ -129,6 +170,14 @@ class Pattern(ABC):
 
     @staticmethod
     def get_function(line):
+        """Filter the start address and the name of the function.
+
+        Args:
+            line (str): the text line of the function
+
+        Returns:
+            (int, str): the start address and the name of the function
+        """
         line_array = line.split(" ")
         address = int(line_array[0], 16)
         name = " ".join(line_array[1:])[1:-2]
@@ -137,6 +186,14 @@ class Pattern(ABC):
 
     @staticmethod
     def get_section(line):
+        """Filter the name of the section.
+
+        Args:
+            line (str): the text line of the section
+
+        Returns:
+            str: the name of the section
+        """
         line_array = line.split(" ")
         name = line_array[-1][0:-1]
 
@@ -158,8 +215,9 @@ class Pattern(ABC):
         raise NotImplementedError
 
 
-# ARM and Thumb instruction set
 class arm(Pattern):
+    """Contain the ARM and Thumb instruction sets."""
+
     arch = ["arm"]
 
     #   1069c:   ebffff80        bl      104a4 <func_alpha>
@@ -250,6 +308,8 @@ class arm(Pattern):
 
 
 class aarch64(arm):
+    """Contain the aarch64 instruction sets."""
+
     arch = ["aarch64"]
 
     @staticmethod
@@ -268,6 +328,8 @@ class aarch64(arm):
 
 
 class x86(Pattern):
+    """Contain the x86 instruction set."""
+
     arch = ["x86"]
 
     #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
@@ -311,6 +373,8 @@ class x86(Pattern):
 
 
 class x86_64(x86):
+    """Contain the x86 64bit instruction set."""
+
     arch = ["x86_64"]
 
     #   4004c3:   55                      push   %esp
@@ -324,15 +388,44 @@ class x86_64(x86):
 
 
 class Visitor:
+    """Visit each node of the tree, which represents all recursive function calls.
+
+    Each node represents a function. All childs of a node are functions, which are
+    called by the function represented by the current node.
+
+    The visitor walks through the whole tree by walking down and up and mark all visited
+    nodes to not visit them again.
+
+    Attributes:
+        callstack (list[Stack.Table]):
+            The function which have to be called to reach the current function
+        queue (list[Stack.Table]):
+            Contains functions of each function in callstack. The first array contains
+            functions which have to be handled after the first function in callstack has
+            been done. The second array in the queue includes the functions which have
+            to be handled after the second function in the callstack has been done...
+    """
+
     callstack = []
     queue = []
 
     def __init__(self, entrances):
+        """Create the object.
+
+        Args:
+            entrances (list[Stack.Table]):
+                The entry functions of the binary like the main function.
+        """
         if entrances:
             self.callstack = [entrances[-1]]
             self.queue = [entrances[:-1]]
 
     def down(self):
+        """Walk to a leaf of the current sub-tree.
+
+        Returns:
+            Stack.Function: the leaf node
+        """
         next_call = self.callstack[-1]
         calls = [child for child in next_call.calls if not child.visited]
 
@@ -353,6 +446,11 @@ class Visitor:
         return self.callstack[-1]
 
     def up(self):
+        """Walk up to the next node with an unvisited leafs.
+
+        Returns:
+            Stack.Function: the node with an unvisited leaf
+        """
         if self.callstack:
             self.callstack.pop()
 
@@ -931,13 +1029,12 @@ class Stacklimit:
         return self._handle_cycle(callstack)
 
     def calculate_stack(self):
-        """
-        :callstack: the function which have to called to reach the current function
-        :queue: contains functions of each function in callstack. The first array contains functions which have to
-                handle after the first function in callstack has been done. The second array in the queue includes the
-                functions which have to handle after the second function in the callstack has been done...
-        """
+        """Calculate the maximal recursive stack size for each function.
 
+        Returns:
+            bool: true if the stack has a limit and false if the stack limit cannot be
+                  determined
+        """
         entrances = [function for function in self.stacktable if not function.returns]
         visitor = Visitor(entrances)
 
@@ -962,6 +1059,15 @@ class Stacklimit:
         return True
 
     def parse(self, binary):
+        """Calculate the stack size of each function.
+
+        Only the stack size of the function itself is considered. Stack changes caused by
+        function calls within the current function are ignored.
+
+        Args:
+            binary (str): the path to the binary file
+        """
+
         current = None
         file = None
 
@@ -1086,6 +1192,11 @@ class Stacklimit:
             function.visited = False
 
     def get_stack_limit(self):
+        """Get the maximal stack size.
+
+        Returns:
+            int: the maximal stack size
+        """
         return self.stacktable.limit()
 
     def print_stack_table(self, show_header=False, show_section=False):
@@ -1173,6 +1284,7 @@ class Stacklimit:
                 )
 
     def print_call_tree(self):
+        """Print the function call tree."""
         for top in self.stacktable:
             if not top.returns and self._regard_function(top):
                 self._print_call_branch(top)
