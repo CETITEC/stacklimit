@@ -23,7 +23,8 @@ classifiers = [
 style = [
   "black",
   "isort",
-  "pre-commit"
+  "pre-commit",
+  "pydocstyle"
 ]
 
 [tool.isort]
