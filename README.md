@@ -43,6 +43,17 @@ Requirements
 Development
 -----------
 
+To run all checks like the code formatter and all unit tests just execute
+```
+pre-commit run --all-files
+```
+
+To run those checks automatically when creating a new commit, just configure
+`pre-commit` within the project folder with
+```
+pre-commit install
+```
+
 Tools:
 * [black](https://pypi.org/project/black): code formatter
 * [isort](https://pypi.org/project/isort): imports sorter
