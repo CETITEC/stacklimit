@@ -96,7 +96,7 @@ class Pattern(ABC):
 
     Attributes:
         arch (list[str]):         the supported architectures
-        os_functions (list[str]): OS functions, which shall be ignored
+        os_functions (list[str]): OS functions, e.g. for initialization and termination
         FileFormat (str):         regex of the file format line
         Section (str):            regex of sections
         Function (str):           regex of functions
@@ -505,7 +505,36 @@ class Visitor:
 
 
 class Stack:
+    """The infrastructure to collect stack information of executables or libraries.
+
+    In the following Executables and libraries are called binaries.
+    """
+
     class Function:
+        """A function of a binary.
+
+        The class includes all essential attributes of a function needed to build a call
+        tree and calculates the stack size.
+
+        Attributes:
+            address (int):         the start address of the function
+            name (str):            the function name
+            file (str):            the path of the object file the function is defined
+            size (int):            the size the function will let the stack maximal grow
+            total (int):           the size the function and the functions, which can be
+                                   called be this function, can let the stack maximal
+                                   grow
+            dynamic (bool):        if the function executes a dynamic stack operation
+            imprecise (bool):      if the stack size cannot be calculated exactly
+                                   (because of function pointers or call cycles)
+            cycle (bool):          if the function can be called recursively
+                                   (by a recursive call)
+            calls (Stack.Table):   the functions, which can be called by this function
+            returns (Stack.Table): the call stack of the Visitor of the function
+            visited (bool):        if the function was already visited by the Visitor
+            section (str):         the section the function is defined
+        """
+
         address = None
         name = None
         file = None
@@ -555,6 +584,12 @@ class Stack:
             return self.name
 
     class Table:
+        """The function database of a binary.
+
+        Attributes:
+            table (list(Stack.Function)): the list of the binary functions
+        """
+
         table = None
 
         def __init__(self, table):
@@ -586,11 +621,27 @@ class Stack:
             return self.table.__setitem__(key, value)
 
         def append(self, function):
+            """Append a function.
+
+            Args:
+                function (Stack.Function): the function
+
+            Returns:
+                Stack.function: the function wich was appended
+            """
             self.table.append(function)
             return function
 
         # FIXME: This doesn't work for arm, because there are multiple system functions which has the address 0x0
         def find(self, address):
+            """Search the function.
+
+            Args:
+                address (int): the function start address
+
+            Returns:
+                Stack.Function: the function
+            """
             for function in self.table:
                 if address == function.address:
                     return function
@@ -598,9 +649,15 @@ class Stack:
             return None
 
         def sort(self):
+            """Sort the functions by Stack.Function.total with the largest value first."""
             self.table.sort(key=lambda node: node.total, reverse=True)
 
         def limit(self):
+            """Return the largest Stack.Function.total value.
+
+            Returns:
+                int: the largest Stack.Function.total value
+            """
             limit = 0
 
             for function in self.table:
