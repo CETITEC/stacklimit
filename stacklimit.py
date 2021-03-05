@@ -202,16 +202,43 @@ class Pattern(ABC):
     @staticmethod
     @abstractmethod
     def get_function_call(line):
+        """Filter the address and the name of the function which is called.
+
+        Args:
+            line (str): the text line of the function call operation
+
+        Returns:
+            (int, str): the address and the name of the function which is called
+        """
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def get_stack_push_size(line):
+        """Calculate the size difference of the stack after the stack push operation.
+
+        This function will return how much the stack will grow after the stack push
+        operation.
+
+        Args:
+            line (str): the text line of the stack push operation
+
+        Returns:
+            int: the size the stack will grow
+        """
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def get_stack_sub_size(line):
+        """Filter the size the stack sub operation will manipulate the stack.
+
+        Args:
+            line (str): the text line of the stack sub operation
+
+        Returns:
+            int: the size the stack will be manipulated
+        """
         raise NotImplementedError
 
 
@@ -285,6 +312,14 @@ class arm(Pattern):
 
     @staticmethod
     def get_stack_push_count(line):
+        """Count the registers pushed onto the stack.
+
+        Args:
+            line (str): the text line of the stack push operation
+
+        Returns:
+            int: the number of the registers
+        """
         # TODO: push {r0,r4-r7}
         temp = line.split("{")[-1]
         temp = temp.split("}")[0]
