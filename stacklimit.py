@@ -550,6 +550,19 @@ class Stack:
         section = None
 
         def __init__(self, address=None, name=None, section=None, file=None, size=0):
+            """Create the object.
+
+            Args:
+                address (int, optional): the start address of the function.
+                                         Defaults to None.
+                name (str, optional):    the function name. Defaults to None.
+                section (str, optional): the section the function is defined.
+                                         Defaults to None.
+                file (str, optional):    the path of the object file the function is
+                                         defined. Defaults to None.
+                size (int, optional):    the size the function will let the stack
+                                         maximal grow. Defaults to 0.
+            """
             self.address = address
             if len(name) > MAX_NAME_LEN:
                 name = name[: MAX_NAME_LEN - 3] + "..."
@@ -561,26 +574,33 @@ class Stack:
             self.returns = Stack.Table([])
 
         def __lt__(self, other):
+            """Return self.address < other.address."""
             return self.address < other.address
 
         def __gt__(self, other):
+            """Return self.address > other.address."""
             return self.address > other.address
 
         def __eq__(self, other):
+            """Return self.address == other.address."""
             if other is None:
                 return False
             return self.address == other.address
 
         def __le__(self, other):
+            """Return self.address <= other.address."""
             return self.address <= other.address
 
         def __ge__(self, other):
+            """Return self.address >= other.address."""
             return self.address >= other.address
 
         def __ne__(self, other):
+            """Return self.address != other.address."""
             return self.address != other.address
 
         def __repr__(self):
+            """Return repr(self.name)."""
             return self.name
 
     class Table:
@@ -593,31 +613,44 @@ class Stack:
         table = None
 
         def __init__(self, table):
+            """Create the object.
+
+            Args:
+                table (list(Stack.Function)): the list of the binary functions
+            """
             self.table = table
 
         def __contains__(self, item):
+            """Return if the Table contains the function."""
             return self.find(item.address)
 
         def __delitem__(self, key):
+            """Delete the item."""
             index = self.table.index(key)
             del self.table[index]
 
         def __getitem__(self, item):
+            """Return the item."""
             return self.table.__getitem__(item)
 
         def __iter__(self):
+            """Return the iterator."""
             return self.table.__iter__()
 
         def __len__(self):
+            """Return the number of functions."""
             return len(self.table)
 
         def __missing__(self, key):
+            """Return if item of a key is missing."""
             return self.table.__missing__(key)
 
         def __repr__(self):
+            """Return repr(self.table)."""
             return str(self.table)
 
         def __setitem__(self, key, value):
+            """Set the item of with the key."""
             return self.table.__setitem__(key, value)
 
         def append(self, function):
