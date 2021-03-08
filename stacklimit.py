@@ -802,12 +802,14 @@ class Stacklimit:
             return msg
 
     def _find_objdump(self, binary):
-        objdumps = [
-            dir + file
-            for dir in PATH
-            for file in listdir(dir)
-            if file.endswith("objdump")
-        ]
+        objdumps = []
+        for dir in PATH:
+            try:
+                for file in listdir(dir):
+                    if file.endswith("objdump"):
+                        objdumps.append(dir + file)
+            except FileNotFoundError:
+                pass
 
         self._print(Message.DEBUG, "Search compatible objdump...")
 
