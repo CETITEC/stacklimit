@@ -1444,6 +1444,7 @@ class Stacklimit:
 
 
 def main():
+    """Entry point for the command prompt."""
     parser = argparse.ArgumentParser(
         prog="stacklimit",
         formatter_class=argparse.RawDescriptionHelpFormatter,
