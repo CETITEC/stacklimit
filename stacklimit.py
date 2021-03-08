@@ -667,6 +667,24 @@ class Stack:
 
 
 class Stacklimit:
+    """Infrastructure to calculate the maximal stack size.
+
+    Attributes:
+        arch (str):                 the architecture the code was compiled for
+        color (bool):               show messages in color
+        debug (bool):               show debug messages
+        quiet (bool):               Suppress informative messages
+        warn (bool):                show warnings
+        multiple_warn (bool):       show same warnings multiple times
+        warn_cycle (bool):          show warnings for recusrive function calls
+        warn_fp (bool):             show warnings for function pointers
+        warn_dynamic (bool):        show warnings for dynamic stack operations
+        regard_os_functions (bool): consider OS functions defined
+        readelf_path (str):         the path to the readelf binary
+        objdump_path (str):         the path to the objdump binary
+        stacktable (Stack.Table):   the function database to calculate the stack size
+    """
+
     arch = None
     color = None
     debug = None
@@ -698,6 +716,40 @@ class Stacklimit:
         objdump=None,
         binary=None,
     ):
+        """Create the object.
+
+        Args:
+            debug (bool, optional):
+                Show debug messages. Defaults to False.
+            warn (bool, optional):
+                Show warnings. Defaults to True.
+            quiet (bool, optional):
+                Suppress informative messages. Error, debug and warn messages are not
+                affected by this option. Defaults to False.
+            color (bool, optional):
+                Show messages in color. Defaults to False.
+            multiple_warn (bool, optional):
+                Show same warnings multiple times. If this is False the same warning
+                will only displayed once and suppressed in the future. Defaults to True.
+            regard_os_functions (bool, optional):
+                Consider OS functions defined in Pattern.os_functions. Defaults to True.
+            arch (str, optional if binary is set):
+                the architecture the code was compiled for. This defines with which
+                instruction set the binary will be parsed. If not defined it will be
+                detected automatically through the binary bypassed through the parameter
+                binary. Defaults to None.
+            objdump (str, optional):
+                the path to the objdump binary. If not set, the program will try to find
+                it itself. Defaults to None.
+            binary (str, optional if arch is set):
+                the path to the binary to determine the architecture
+
+        Raises:
+            ValueError: arch parameter wasn't set and the platform couldn't be determined
+            ValueError: arch parameter was set with an unknown value
+            ValueError: objdump couldn't be found
+            ValueError: readelf couldn't be found
+        """
         self.debug = debug
         self.color = color
         self.quiet = quiet
@@ -1293,6 +1345,14 @@ class Stacklimit:
         return self.stacktable.limit()
 
     def print_stack_table(self, show_header=False, show_section=False):
+        """Print all functions and their stack usage.
+
+        Args:
+            show_header (bool, optional):
+                Show the column headers of the table. Defaults to False.
+            show_section (bool, optional):
+                Show the section of each function. Defaults to False.
+        """
         # Should never happen
         if not self.stacktable:
             return
