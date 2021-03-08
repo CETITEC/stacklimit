@@ -1161,7 +1161,6 @@ class Stacklimit:
         Args:
             binary (str): the path to the binary file
         """
-
         current = None
         file = None
 
