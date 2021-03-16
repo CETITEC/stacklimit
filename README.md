@@ -40,6 +40,15 @@ Requirements
 * **readelf**
 
 
+Build
+-----
+
+To build the sources and wheels archives, use [Poetry](https://python-poetry.org):
+```
+poetry build
+```
+
+
 Development
 -----------
 
@@ -55,7 +64,13 @@ pre-commit install
 ```
 
 Tools:
+* [Poetry](https://python-poetry.org): build tool
 * [black](https://pypi.org/project/black): code formatter
 * [isort](https://pypi.org/project/isort): imports sorter
 * [pre-commit](https://pypi.org/project/pre-commit): pre-commit hooks for git
 * [pydocstyle](https://pypi.org/project/pydocstyle): docstring style checker
+
+To install all develop dependencies, use [Poetry](https://python-poetry.org):
+```
+poetry install
+```

@@ -1,11 +1,10 @@
-[project]
+[tool.poetry]
 name = "stacklimit"
 version = "2021.02.24"
 description = "Determines the maximum stack size of a binary program using the ELF format"
 authors = ["Moritz Luedecke <moritz.luedecke@cetitec.com>"]
 license = ""
 readme = "README.md"
-requires-python = ">=3.6"
 keywords = ["stack", "limit", "elf", "object", "binaries", "static", "analysis", "CETITEC"]
 
 classifiers = [
@@ -20,12 +19,18 @@ classifiers = [
   "Topic :: Software Development :: Memory"
 ]
 
-style = [
-  "black",
-  "isort",
-  "pre-commit",
-  "pydocstyle"
-]
+[tool.poetry.dependencies]
+python = ">=3.6.1,<4.0"
+
+[tool.poetry.dev-dependencies]
+black = "^20.8b1"
+isort = ">=5.7"
+pre-commit = ">=2.10"
+pydocstyle = ">=5.1"
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
@@ -35,4 +40,3 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 88
-
