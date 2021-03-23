@@ -12,7 +12,7 @@ from cmath import log
 from os import environ, listdir
 from os.path import isfile
 
-from patterns import Pattern, aarch64, arm, x86
+from patterns import Pattern, aarch64, arm, x86, x86_64
 
 PATH = [path + "/" for path in ["."] + environ["PATH"].split(":")]
 MAX_NAME_LEN = 64
@@ -90,21 +90,6 @@ class Message:
     ERROR = MessageType("Error: ", Color.RED)
     INFO = MessageType()
     WARN = MessageType("Warning: ", Color.PURPLE)
-
-
-class x86_64(x86):
-    """Contain the x86 64bit instruction set."""
-
-    arch = ["x86_64"]
-
-    #   4004c3:   55                      push   %esp
-    #   4004c3:   55                      pushq  %rbp
-    StackPushOp = ".*( |\t)+push(q|)( |\t)+"
-
-    @staticmethod
-    def get_stack_push_size(line):
-        """Implement Pattern.get_stack_push_size."""
-        return 8
 
 
 class Visitor:
