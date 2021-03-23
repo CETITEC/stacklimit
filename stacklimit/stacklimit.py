@@ -1,9 +1,6 @@
 #!/bin/python3
-"""
-Determine the maximum stack size of a binary program using the ELF format.
+"""Determine the maximum stack size of a binary program using the ELF format."""
 
-@author Moritz Luedecke (CETITEC)
-"""
 
 import re
 import subprocess
