@@ -12,7 +12,7 @@ from cmath import log
 from os import environ, listdir
 from os.path import isfile
 
-from patterns import Pattern, aarch64, arm
+from patterns import Pattern, aarch64, arm, x86
 
 PATH = [path + "/" for path in ["."] + environ["PATH"].split(":")]
 MAX_NAME_LEN = 64
@@ -90,51 +90,6 @@ class Message:
     ERROR = MessageType("Error: ", Color.RED)
     INFO = MessageType()
     WARN = MessageType("Warning: ", Color.PURPLE)
-
-
-class x86(Pattern):
-    """Contain the x86 instruction set."""
-
-    arch = ["x86"]
-
-    #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
-    FunctionCall = "^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  [0-9a-f]+ \<.*\>$"
-
-    #   400804:   ff d0                   callq  *%rax
-    FunctionPointer = "^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  .*%.*$"
-
-    #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
-    #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
-    StackDynamicOp = ".*( |\t)+sub( |\t)+\%.*,\%(e|r)sp$"
-
-    #   4004c3:   55                      push   %esp
-    #   4004c3:   55                      push   %rsp
-    StackPushOp = ".*( |\t)+push(l|)( |\t)+"
-
-    #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
-    StackSubOp = ".*( |\t)+sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$"
-
-    @staticmethod
-    def get_function_call(line):
-        """Implement Pattern.get_function_call."""
-        line = line.replace("\t", " ")
-        line = line.replace("  ", " ")
-        line_array = line.split(" ")
-        address = int(line_array[-2], 16)
-        name = line_array[-1][1:-1]
-
-        return address, name
-
-    @staticmethod
-    def get_stack_push_size(line):
-        """Implement Pattern.get_stack_push_size."""
-        return 4
-
-    @staticmethod
-    def get_stack_sub_size(line):
-        """Implement Pattern.get_stack_sub_size."""
-        temp = line.split(" ")[-1]
-        return temp.split(",")[0][1:]
 
 
 class x86_64(x86):
