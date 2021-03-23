@@ -12,7 +12,7 @@ from cmath import log
 from os import environ, listdir
 from os.path import isfile
 
-from patterns import Pattern, arm
+from patterns import Pattern, aarch64, arm
 
 PATH = [path + "/" for path in ["."] + environ["PATH"].split(":")]
 MAX_NAME_LEN = 64
@@ -90,26 +90,6 @@ class Message:
     ERROR = MessageType("Error: ", Color.RED)
     INFO = MessageType()
     WARN = MessageType("Warning: ", Color.PURPLE)
-
-
-class aarch64(arm):
-    """Contain the aarch64 instruction sets."""
-
-    arch = ["aarch64"]
-
-    @staticmethod
-    def get_stack_push_size(line):
-        """Implement Pattern.get_stack_push_size."""
-        return 8 * arm.get_stack_push_count(line)
-
-    @staticmethod
-    def get_stack_sub_size(line):
-        """Implement Pattern.get_stack_sub_size."""
-        temp = line.split("#")[-1]
-        temp = temp.split("]")[0]
-        if temp[0] == "-":
-            temp = temp[1:]
-        return temp
 
 
 class x86(Pattern):
