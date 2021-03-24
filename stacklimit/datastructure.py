@@ -16,11 +16,11 @@ class Visitor:
     Attributes:
         callstack (list[Stack.Table]):
             The function which have to be called to reach the current function
-        queue (list[Stack.Table]):
-            Contains functions of each function in callstack. The first array contains
+        queue (list[list[Stack.Table]]):
+            Contains functions of each function in callstack. The first list contains
             functions which have to be handled after the first function in callstack has
-            been done. The second array in the queue includes the functions which have
-            to be handled after the second function in the callstack has been done...
+            been done. The second list in the queue includes the functions which have to
+            be handled after the second function in the callstack has been done...
     """
 
     callstack = []
