@@ -131,13 +131,13 @@ class Stack:
         # lock = False
         section = None
 
-        def __init__(self, address=None, name=None, section=None, file=None, size=0):
+        def __init__(self, address, name=None, section=None, file=None, size=0):
             """Create the object.
 
             Args:
-                address (int, optional): the start address of the function.
-                                         Defaults to None.
-                name (str, optional):    the function name. Defaults to None.
+                address (int):           the start address of the function.
+                name (str, optional):    the function name. If not set, the address will
+                                         be taken as the name. Defaults to None.
                 section (str, optional): the section the function is defined.
                                          Defaults to None.
                 file (str, optional):    the path of the object file the function is
@@ -146,6 +146,8 @@ class Stack:
                                          maximal grow. Defaults to 0.
             """
             self.address = address
+            if name is None:
+                name = str(address)
             if len(name) > MAX_NAME_LEN:
                 name = name[: MAX_NAME_LEN - 3] + "..."
             self.name = name
