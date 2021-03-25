@@ -16,7 +16,8 @@ from stacklimit.output import Color, MessageType
         )
     ),
 )
-def test_init_of_message_type(prefix, color):
+def test_message_type__init__(prefix, color):
+    """Test MessageType.__init__()."""
     message = MessageType(prefix, color)
     assert message.prefix == prefix
     assert message.color == color
