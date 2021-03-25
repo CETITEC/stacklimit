@@ -41,6 +41,16 @@ class Visitor:
             self.callstack = []
             self.queue = []
 
+    def __eq__(self, other):
+        """Return self.callstack == other.callstack and self.queue == other.queue."""
+        if other is None:
+            return False
+        return self.callstack == other.callstack and self.queue == other.queue
+
+    def __ne__(self, other):
+        """Return self.callstack != other.callstack or self.queue != other.queue."""
+        return not self.__eq__(other)
+
     def down(self):
         """Walk to a leaf of the current sub-tree.
 
