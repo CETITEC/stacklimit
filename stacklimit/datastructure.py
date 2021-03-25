@@ -26,16 +26,20 @@ class Visitor:
     callstack = []
     queue = []
 
-    def __init__(self, entrances):
+    def __init__(self, entrances=None):
         """Create the object.
 
         Args:
-            entrances (list[Stack.Table]):
-                The entry functions of the binary like the main function.
+            entrances (list[Stack.Table], optional):
+                The entry functions of the binary like the main function. Defaults to
+                None.
         """
         if entrances:
             self.callstack = [entrances[-1]]
             self.queue = [entrances[:-1]]
+        else:
+            self.callstack = []
+            self.queue = []
 
     def down(self):
         """Walk to a leaf of the current sub-tree.
