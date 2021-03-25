@@ -189,9 +189,7 @@ class Stack:
 
         def __ne__(self, other):
             """Return self.address != other.address."""
-            if other is None:
-                return False
-            return self.address != other.address
+            return not self.__eq__(other)
 
         def __repr__(self):
             """Return repr(self.name)."""
