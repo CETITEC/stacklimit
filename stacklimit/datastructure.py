@@ -60,6 +60,10 @@ class Visitor:
         next_call = self.callstack[-1]
         calls = [child for child in next_call.calls if not child.visited]
 
+        # FIXME: Return None if children are empty
+        # if not calls:
+        #    return None
+
         while calls:
             next_call = calls.pop()
 
@@ -69,6 +73,8 @@ class Visitor:
 
             self.callstack.append(next_call)
 
+            # FIXME: Always add this, to make it more consequent and the algorithm would
+            # have less side effects to handle...
             if calls:
                 self.queue.append(calls)
 
@@ -76,11 +82,17 @@ class Visitor:
 
         return self.callstack[-1]
 
+    # FIXME: Only walk up, but not to the side. Current behavior is like this:
+    #
+    # Before:   0    After:   0
+    #          / \           / \
+    #       ->1   2         1 ->2
     def up(self):
-        """Walk up to the next node with an unvisited leafs.
+        """Walk up to the parent node and down to the next unvisited children.
 
         Returns:
-            Stack.Function: the node with an unvisited leaf
+            Stack.Function: the unvisited sibling of the current node if available,
+                            otherwise the parent node.
         """
         if self.callstack:
             self.callstack.pop()
@@ -91,8 +103,12 @@ class Visitor:
             if self.queue[tier]:
                 self.callstack.append(self.queue[tier].pop())
 
+            # FIXME: If we always empty lists in down(), we always have to delete it
+            # here, too
             if not self.queue[tier]:
                 del self.queue[tier]
+                # FIXME: if we reach that, we are sure that we won't walk down again.
+                # Why not keep going upwards until there are unvisited children again?
 
         if len(self.callstack):
             return self.callstack[-1]
