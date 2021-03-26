@@ -7,7 +7,7 @@ MAX_NAME_LEN = 64
 class Visitor:
     """Visit each node of the tree, which represents all recursive function calls.
 
-    Each node represents a function. All childs of a node are functions, which are
+    Each node represents a function. All children of a node are functions, which are
     called by the function represented by the current node.
 
     The visitor walks through the whole tree by walking down and up and mark all visited
@@ -282,7 +282,7 @@ class Stack:
                 function (Stack.Function): the function
 
             Returns:
-                Stack.function: the function wich was appended
+                Stack.function: the function which was appended
             """
             self.table.append(function)
             return function

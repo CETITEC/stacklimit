@@ -54,7 +54,7 @@ class Stacklimit:
         quiet (bool):               Suppress informative messages
         warn (bool):                show warnings
         multiple_warn (bool):       show same warnings multiple times
-        warn_cycle (bool):          show warnings for recusrive function calls
+        warn_cycle (bool):          show warnings for recursive function calls
         warn_fp (bool):             show warnings for function pointers
         warn_dynamic (bool):        show warnings for dynamic stack operations
         regard_os_functions (bool): consider OS functions defined
