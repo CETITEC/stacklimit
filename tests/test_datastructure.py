@@ -57,10 +57,11 @@ def test_visitor__init__():
     assert visitor.queue[0][1] in entrances
 
 
-def test_visitor__eq__with_None():
+def test_visitor_equal_with_None():
     """Test Visitor.__eq__(None)."""
     visitor = Visitor()
     assert visitor.__eq__(None) == False
+    assert visitor.__ne__(None) == True
 
 
 @pytest.mark.parametrize(
@@ -85,23 +86,13 @@ def test_visitor__eq__with_None():
         # fmt: on
     ],
 )
-def test_visitor__eq__(callstack1, queue1, callstack2, queue2, expected):
-    """Test Visitor.__eq__()."""
+def test_visitor_equal(callstack1, queue1, callstack2, queue2, expected):
+    """Test Visitor.__eq__() and  Visitor.__ne__()."""
     visitor1 = create_visitor(callstack1, queue1)
     visitor2 = create_visitor(callstack2, queue2)
 
     assert visitor1.__eq__(visitor2) == expected
-
-
-def test_visitor__ne__():
-    """Test Visitor.__ne__()."""
-    visitor1 = create_visitor([0], [[1]])
-    visitor2 = create_visitor([0], [[1]])
-
-    assert visitor1.__ne__(visitor2) == False
-
-    visitor2.callstack[0].address = 2
-    assert visitor1.__ne__(visitor2) == True
+    assert visitor1.__ne__(visitor2) == (not expected)
 
 
 @pytest.fixture
