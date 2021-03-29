@@ -221,6 +221,8 @@ class Stack:
 
         def __repr__(self):
             """Return repr(self.name)."""
+            if len(self.file):
+                return "{}: {}".format(self.file, self.name)
             return self.name
 
     class Table:
