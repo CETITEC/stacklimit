@@ -1,6 +1,7 @@
 """Test cases for methods and classes defined in stacklimit.py file."""
 
 import itertools
+import operator
 
 import pytest
 
@@ -504,3 +505,31 @@ def test_visitor_up_without_parent(functions3):
 
     assert visitor.callstack == []
     assert visitor.queue == []
+
+
+@pytest.mark.parametrize(
+    "operator, file1, address1, file2, address2",
+    itertools.product(
+        [
+            operator.__lt__,
+            operator.__gt__,
+            operator.__eq__,
+            operator.__le__,
+            operator.__ge__,
+            operator.__ne__,
+        ],
+        ["file_one", "file_two"],
+        [0, 1],
+        ["file_one", "file_two"],
+        [0, 1],
+    ),
+)
+def test_stack_function_comparators(operator, file1, address1, file2, address2):
+    """Test all comperators of Stack.Function."""
+    function1 = Stack.Function(address1, file=file1)
+    function2 = Stack.Function(address2, file=file2)
+
+    if file1 == file2:
+        assert operator(function1, function2) == operator(address1, address2)
+    else:
+        assert operator(function1, function2) == operator(file1, file2)
