@@ -508,6 +508,55 @@ def test_visitor_up_without_parent(functions3):
 
 
 @pytest.mark.parametrize(
+    "address, name, section, file, size",
+    [
+        # fmt: off
+        (1234, "function_name", "secret",  "object_file", 42),
+        (4321, "test",          "section", "file3",       1337),
+        # fmt: on
+    ],
+)
+def test_stack_function__init__(address, name, section, file, size):
+    """Test Stack.Function.__init__()."""
+    function = Stack.Function(
+        address=address, name=name, section=section, file=file, size=size
+    )
+
+    assert function.address == address
+    assert function.name == name
+    assert function.section == section
+    assert function.file == file
+    assert function.size == size
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        (
+            "the_second_function_name_which_is_1_symbol_longer_than_64_symbols",
+            "the_second_function_name_which_is_1_symbol_longer_than_64_sym...",
+        ),
+        (
+            "this_is_a_shorter_function_name_which_fits_perfect_to_64_symbols",
+            "this_is_a_shorter_function_name_which_fits_perfect_to_64_symbols",
+        ),
+    ],
+)
+def test_stack_function__init__with_long_name(name, expected):
+    """Test Stack.Function.__init__() with long name."""
+    function = Stack.Function(address=0, name=name)
+
+    assert function.name == expected
+
+
+def test_stack_function__init__with_no_name():
+    """Test Stack.Function.__init__() with no name set."""
+    function = Stack.Function(address=1234)
+
+    assert function.name == str(1234)
+
+
+@pytest.mark.parametrize(
     "operator, file1, address1, file2, address2",
     itertools.product(
         [
