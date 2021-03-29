@@ -147,7 +147,7 @@ class Stack:
 
         address = None
         name = None
-        file = None
+        file = ""
         size = None
         total = 0
         dynamic = False
@@ -159,7 +159,7 @@ class Stack:
         # lock = False
         section = None
 
-        def __init__(self, address, name=None, section=None, file=None, size=0):
+        def __init__(self, address, name=None, section=None, file="", size=0):
             """Create the object.
 
             Args:
@@ -169,7 +169,7 @@ class Stack:
                 section (str, optional): the section the function is defined.
                                          Defaults to None.
                 file (str, optional):    the path of the object file the function is
-                                         defined. Defaults to None.
+                                         defined. Defaults to "".
                 size (int, optional):    the size the function will let the stack
                                          maximal grow. Defaults to 0.
             """
@@ -187,23 +187,33 @@ class Stack:
 
         def __lt__(self, other):
             """Return self.address < other.address."""
-            return self.address < other.address
+            if self.file == other.file:
+                return self.address < other.address
+            return self.file < other.file
 
         def __gt__(self, other):
             """Return self.address > other.address."""
-            return self.address > other.address
+            if self.file == other.file:
+                return self.address > other.address
+            return self.file > other.file
 
         def __eq__(self, other):
             """Return self.address == other.address."""
-            return self.address == other.address
+            if self.file == other.file:
+                return self.address == other.address
+            return self.file == other.file
 
         def __le__(self, other):
             """Return self.address <= other.address."""
-            return self.address <= other.address
+            if self.file == other.file:
+                return self.address <= other.address
+            return self.file <= other.file
 
         def __ge__(self, other):
             """Return self.address >= other.address."""
-            return self.address >= other.address
+            if self.file == other.file:
+                return self.address >= other.address
+            return self.file >= other.file
 
         def __ne__(self, other):
             """Return self.address != other.address."""
