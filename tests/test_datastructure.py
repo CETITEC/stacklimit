@@ -57,13 +57,6 @@ def test_visitor__init__():
     assert visitor.queue[0][1] in entrances
 
 
-def test_visitor_equal_with_None():
-    """Test Visitor.__eq__(None)."""
-    visitor = Visitor()
-    assert visitor.__eq__(None) == False
-    assert visitor.__ne__(None) == True
-
-
 @pytest.mark.parametrize(
     "callstack1, queue1, callstack2, queue2, expected",
     [

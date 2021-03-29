@@ -43,8 +43,6 @@ class Visitor:
 
     def __eq__(self, other):
         """Return self.callstack == other.callstack and self.queue == other.queue."""
-        if other is None:
-            return False
         return self.callstack == other.callstack and self.queue == other.queue
 
     def __ne__(self, other):
@@ -189,32 +187,22 @@ class Stack:
 
         def __lt__(self, other):
             """Return self.address < other.address."""
-            if other is None:
-                return False
             return self.address < other.address
 
         def __gt__(self, other):
             """Return self.address > other.address."""
-            if other is None:
-                return False
             return self.address > other.address
 
         def __eq__(self, other):
             """Return self.address == other.address."""
-            if other is None:
-                return False
             return self.address == other.address
 
         def __le__(self, other):
             """Return self.address <= other.address."""
-            if other is None:
-                return False
             return self.address <= other.address
 
         def __ge__(self, other):
             """Return self.address >= other.address."""
-            if other is None:
-                return False
             return self.address >= other.address
 
         def __ne__(self, other):
