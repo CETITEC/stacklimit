@@ -24,7 +24,7 @@ class Visitor:
     """
 
     callstack = []
-    queue = []
+    queue = [[]]
 
     def __init__(self, entrances=None):
         """Create the object.
@@ -39,7 +39,7 @@ class Visitor:
             self.queue = [entrances[:-1]]
         else:
             self.callstack = []
-            self.queue = []
+            self.queue = [[]]
 
     def __eq__(self, other):
         """Return self.callstack == other.callstack and self.queue == other.queue."""

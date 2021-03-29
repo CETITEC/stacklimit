@@ -29,14 +29,14 @@ def test_visitor__init__with_none():
     """Test Visitor.__init__(None)."""
     visitor = Visitor(None)
     assert visitor.callstack == []
-    assert visitor.queue == []
+    assert visitor.queue == [[]]
 
 
 def test_visitor__init__with_empty_list():
     """Test Visitor.__init__([])."""
     visitor = Visitor([])
     assert visitor.callstack == []
-    assert visitor.queue == []
+    assert visitor.queue == [[]]
 
 
 def test_visitor__init__():
