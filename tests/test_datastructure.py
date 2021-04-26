@@ -556,6 +556,16 @@ def test_stack_function__init__with_no_name():
     assert function.name == str(1234)
 
 
+def test_stack_function__repr__(functions1):
+    """Test Stack.Function.__repr__()."""
+    function = Stack.Function(address=1234)
+
+    assert function.__repr__() == function.name
+
+    function.file = "file"
+    assert function.__repr__() == "{}: {}".format(function.file, function.name)
+
+
 @pytest.mark.parametrize(
     "operator, file1, address1, file2, address2",
     itertools.product(
