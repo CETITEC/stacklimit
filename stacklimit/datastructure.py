@@ -284,6 +284,7 @@ class Stack:
             return function
 
         # FIXME: This doesn't work for arm, because there are multiple system functions which has the address 0x0
+        # Maybe we have to use the file name too?
         def find(self, address):
             """Search the function.
 

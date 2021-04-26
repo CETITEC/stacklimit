@@ -582,3 +582,130 @@ def test_stack_function_comparators(operator, file1, address1, file2, address2):
         assert operator(function1, function2) == operator(address1, address2)
     else:
         assert operator(function1, function2) == operator(file1, file2)
+
+
+def test_stack_table__init__(functions1):
+    """Test Stack.Table.__init__()."""
+    table = Stack.Table(functions1)
+
+    assert table.table == functions1
+
+
+def test_stack_table__contains__(functions1):
+    """Test Stack.Table.__contains__()."""
+    table = Stack.Table(functions1)
+
+    assert table.__contains__(functions1[0]) == functions1[0]
+    assert table.__contains__(functions1[1]) == functions1[1]
+    assert table.__contains__(functions1[2]) == functions1[2]
+
+    assert table.__contains__(Stack.Function(42)) == None
+
+
+def test_stack_table__delitem__(functions1):
+    """Test Stack.Table.__delitem__()."""
+    table = Stack.Table(functions1.copy())
+
+    assert table.table == functions1
+
+    table.__delitem__(functions1[1])
+    assert len(table.table) == 2
+    assert table.table == [functions1[0], functions1[2]]
+
+
+def test_stack_table__getitem__(functions1):
+    """Test Stack.Table.__getitem__()."""
+    table = Stack.Table(functions1)
+
+    assert table.__getitem__(1) == functions1.__getitem__(1)
+
+
+def test_stack_table__iter__(functions1):
+    """Test Stack.Table.__iter__()."""
+    table = Stack.Table(functions1)
+
+    # Comparing the iterators directly is not possible
+    iterator = table.__iter__()
+
+    assert next(iterator) == functions1[0]
+    assert next(iterator) == functions1[1]
+    assert next(iterator) == functions1[2]
+
+
+def test_stack_table__len__(functions1):
+    """Test Stack.Table.__len__()."""
+    table = Stack.Table([])
+
+    assert len(table) == 0
+
+    table.table.append(functions1[0])
+    assert len(table) == 1
+
+    table.table = functions1
+    assert len(table) == len(functions1)
+
+
+def test_stack_table__repr__(functions1):
+    """Test Stack.Table.__repr__()."""
+    table = Stack.Table(functions1)
+
+    assert table.__repr__() == table.table.__repr__()
+
+
+def test_stack_table__setitem__(functions1):
+    """Test Stack.Table.__setitem__()."""
+    table = Stack.Table(functions1)
+
+    assert table[1] == functions1[1]
+
+    table.__setitem__(1, functions1[2])
+    assert table[1] == functions1[2]
+
+
+def test_stack_table____(functions1):
+    """Test Stack.Table.____()."""
+    pass
+
+
+def test_stack_table_append():
+    """Test Stack.Table.append()."""
+    table = Stack.Table([])
+    function = Stack.Function(1)
+
+    assert len(table) == 0
+
+    assert table.append(function) == function
+    assert len(table) == 1
+    assert table[0] == function
+
+
+def test_stack_table_find(functions1):
+    """Test Stack.Table.find()."""
+    table = Stack.Table(functions1)
+
+    assert table.find(functions1[0].address) == functions1[0]
+    assert table.find(functions1[1].address) == functions1[1]
+    assert table.find(functions1[2].address) == functions1[2]
+    assert table.find(1337) == None
+
+
+def test_stack_table_sort(functions1):
+    """Test Stack.Table.sort()."""
+    init_value = [functions1[2], functions1[0], functions1[1]]
+    table = Stack.Table(init_value)
+
+    table.sort()
+    assert table.table == [functions1[0], functions1[2], functions1[1]]
+
+
+def test_stack_table_limit(functions1):
+    """Test Stack.Table.limit()."""
+    table = Stack.Table(functions1)
+
+    assert table.limit() == 6
+
+    new_function = Stack.Function(36, size=36)
+    new_function.total = 42
+
+    table.append(new_function)
+    assert table.limit() == 42
