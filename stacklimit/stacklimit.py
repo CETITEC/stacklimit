@@ -591,9 +591,6 @@ class Stacklimit:
         Args:
             binary (str): the path to the binary file
         """
-        current = None
-        file = None
-
         if self.arch in aarch64.arch:
             pattern = aarch64
         elif self.arch in arm.arch:
@@ -609,7 +606,10 @@ class Stacklimit:
         objdump = subprocess.Popen(
             objdump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+
+        file = None
         section = None
+        current = None
 
         for line in objdump.stdout:
             line = line.decode("utf-8")[:-1]
