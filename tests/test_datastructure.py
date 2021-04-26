@@ -100,9 +100,13 @@ def functions1():
        / \
       1   2
     """
-    functions = [Stack.Function(address) for address in list(range(3))]
+    functions = [Stack.Function(i, size=i + 1) for i in list(range(3))]
 
     functions[0].calls = [functions[1], functions[2]]
+
+    functions[2].total = functions[2].size
+    functions[1].total = functions[1].size
+    functions[0].total = functions[0].size + functions[1].total + functions[2].total
 
     return functions
 
