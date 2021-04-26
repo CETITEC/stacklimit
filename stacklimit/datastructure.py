@@ -263,10 +263,6 @@ class Stack:
             """Return the number of functions."""
             return len(self.table)
 
-        def __missing__(self, key):
-            """Return if item of a key is missing."""
-            return self.table.__missing__(key)
-
         def __repr__(self):
             """Return repr(self.table)."""
             return str(self.table)
