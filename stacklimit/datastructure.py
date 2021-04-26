@@ -220,7 +220,7 @@ class Stack:
             return not self.__eq__(other)
 
         def __repr__(self):
-            """Return repr(self.name)."""
+            """Return self.name."""
             if len(self.file):
                 return "{}: {}".format(self.file, self.name)
             return self.name
