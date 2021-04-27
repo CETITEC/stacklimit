@@ -62,6 +62,7 @@ class Pattern(ABC):
         """Generate a string from operations with a variable number of registers.
 
         > instruction [reg1[, reg2[, reg3 [...]]]]
+        > instruction [reg1[,reg2[,reg3[...]]]]
 
         Args:
             args (list[str]):
@@ -77,7 +78,7 @@ class Pattern(ABC):
             op = "{}( |\t)+{}".format(op, args[1])
 
         for arg in args[2:]:
-            op = "{},( |\t)+{}".format(op, arg)
+            op = "{},( |\t|)+{}".format(op, arg)
 
         return op
 
