@@ -120,6 +120,26 @@ class Stack:
     In the following Executables and libraries are called binaries.
     """
 
+    class Instructions:
+        """Statistic about operation codes of a binary.
+
+        Attributes:
+            total (int):
+                the number of all instructions
+            skipped (int):
+                the number of skipped instructions
+                (skipped potential stack instructions included)
+            skipped_potential_stack_op (int):
+                the number of skipped potential stack instructions
+        """
+
+        # total = None
+        # skipped = None
+        # potential_stack_op = None
+        total = 0
+        skipped = 0
+        skipped_potential_stack_op = 0
+
     class Function:
         """A function of a binary.
 
@@ -230,9 +250,11 @@ class Stack:
 
         Attributes:
             table (list(Stack.Function)): the list of the binary functions
+            instructions:                 the operation code statistic
         """
 
         table = None
+        instructions = None
 
         def __init__(self, table):
             """Create the object.
@@ -241,6 +263,7 @@ class Stack:
                 table (list(Stack.Function)): the list of the binary functions
             """
             self.table = table
+            self.instructions = Stack.Instructions()
 
         def __contains__(self, item):
             """Return if the Table contains the function."""

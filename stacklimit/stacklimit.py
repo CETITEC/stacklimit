@@ -614,15 +614,23 @@ class Stacklimit:
         for line in objdump.stdout:
             line = line.decode("utf-8")[:-1]
 
+            # Set file
             if re.match(pattern.FileFormat, line):
                 line_array = line.split(" ")
                 path = line_array[0][:-1]
                 file = path.split("/")[-1]
 
-            if re.match(pattern.Section, line):
+                # Skip the following code since this line is not an instruction
+                continue
+
+            # Set section
+            elif re.match(pattern.Section, line):
                 section = pattern.get_section(line)
                 self._print(Message.DEBUG)
                 self._print(Message.DEBUG, "Disassembly of section {}:".format(section))
+
+                # Skip the following code since this line is not an instruction
+                continue
 
             elif re.match(pattern.Function, line):
                 (address, name) = pattern.get_function(line)
@@ -641,7 +649,15 @@ class Stacklimit:
                 current.visited = True
                 self._print(Message.DEBUG, "{}:".format(name))
 
-            elif pattern.StackPushOp and re.match(pattern.StackPushOp, line):
+            # Empty line
+            elif len(line) == 0:
+                continue
+
+            # Analyze the instruction
+
+            self.stacktable.instructions.total += 1
+
+            if pattern.StackPushOp and re.match(pattern.StackPushOp, line):
                 self._print(Message.DEBUG, "  StackPushOp    ", line)
                 size = pattern.get_stack_push_size(line)
                 current.size += size
@@ -693,6 +709,9 @@ class Stacklimit:
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
+            else:
+                self._print(Message.DEBUG, "                 ", line)
+                self.stacktable.instructions.skipped += 1
 
         for function in [
             function
