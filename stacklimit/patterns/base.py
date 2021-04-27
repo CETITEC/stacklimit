@@ -82,6 +82,18 @@ class Pattern(ABC):
         for arg in args[2:]:
             op = "{},( |\t|)+{}".format(op, arg)
 
+        # TODO: Make sure that instructions are unambiguous
+        #
+        # > push
+        # with the function call _operation_("push") shall not catch
+        # > pushq
+        # or
+        # > push %reg1
+        #
+        # op = "{}(( |\t)+|$)".format(op)
+        #
+        # After that update all function calls using the suffix "( |\t)+"
+
         return op
 
     @staticmethod
