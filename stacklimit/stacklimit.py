@@ -684,13 +684,13 @@ class Stacklimit:
             self.stacktable.instructions.total += 1
 
             if pattern.StackPushOp and re.match(pattern.StackPushOp, line):
-                self._print(Message.DEBUG, "  StackPushOp    ", line)
+                self._print(Message.DEBUG, "  StackPushOp     ", line)
                 size = pattern.get_stack_push_size(line)
                 current.size += size
 
             # Note: We ignore all 'add' operations. We're only interested in 'sub'.
             elif pattern.StackSubOp and re.match(pattern.StackSubOp, line):
-                self._print(Message.DEBUG, "  StackSubOp     ", line)
+                self._print(Message.DEBUG, "  StackSubOp      ", line)
                 temp = pattern.get_stack_sub_size(line)
                 if temp[:2] == "0x":
                     size = int(temp, 16)
@@ -712,10 +712,11 @@ class Stacklimit:
                 current.size += size
 
             elif pattern.StackDynamicOp and re.match(pattern.StackDynamicOp, line):
+                self._print(Message.DEBUG, "  StackDynamicOp  ", line)
                 current.dynamic = True
 
             elif pattern.FunctionCall and re.match(pattern.FunctionCall, line):
-                self._print(Message.DEBUG, "  FunctionCall   ", line)
+                self._print(Message.DEBUG, "  FunctionCall    ", line)
 
                 (address, name) = pattern.get_function_call(line)
                 function = self.stacktable.find(address)
@@ -730,14 +731,22 @@ class Stacklimit:
                     function.returns.append(current)
 
             elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
-                self._print(Message.DEBUG, "  FunctionPointer", line)
+                self._print(Message.DEBUG, "  FunctionPointer ", line)
 
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
+
             else:
-                self._print(Message.DEBUG, "                 ", line)
                 self.stacktable.instructions.skipped += 1
+
+                if pattern.PotentialStackOp and re.match(
+                    pattern.PotentialStackOp, line
+                ):
+                    self._print(Message.DEBUG, "  PotentialStackOp", line)
+                    self.stacktable.instructions.skipped_potential_stack_op += 1
+                else:
+                    self._print(Message.DEBUG, "                  ", line)
 
         for function in [
             function

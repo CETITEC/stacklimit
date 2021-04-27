@@ -18,6 +18,7 @@ class Pattern(ABC):
         StackDynamicOp (str):     regex of dynamic operations
         StackPushOp (str):        regex of stack push operations
         StackSubOp (str):         regex of substraction operators on the stack pointer
+        PotentialStackOp (str):   regex of potential operations on the stack
     """
 
     arch = ["arm", "aarch64", "x86", "x86_64"]
@@ -56,6 +57,7 @@ class Pattern(ABC):
     StackDynamicOp = None
     StackPushOp = None
     StackSubOp = None
+    PotentialStackOp = None
 
     @staticmethod
     def _operation(*args):
