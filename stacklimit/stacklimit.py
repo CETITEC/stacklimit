@@ -673,7 +673,7 @@ class Stacklimit:
                     )
 
                 current.visited = True
-                self._print(Message.DEBUG, "{}:".format(name))
+                self._print(Message.DEBUG, "{}:".format(self._func(name)))
 
             # Empty line
             elif len(line) == 0:
