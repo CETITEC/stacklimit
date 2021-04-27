@@ -768,6 +768,9 @@ class Stacklimit:
         for function in self.stacktable:
             function.visited = False
 
+        if self.debug:
+            print()
+
     def get_stack_limit(self):
         """Get the maximal stack size.
 
