@@ -815,6 +815,14 @@ class Stacklimit:
         # Increment the length for the imprecise symbol
         total_len = int(log(total_len, 10).real + 1) + 1
 
+        # TODO: Print an explanation of the values
+        # * address   the start address of the function
+        # * function  the function name
+        # * file      file the function is defined
+        # * fsize     bytes the function itself manipulates the stack size
+        # * tsize     bytes the function with all sub-function manipulates the stack
+        #             size
+
         if show_header:
             section = "section "
             if not show_section:
@@ -917,6 +925,34 @@ class Stacklimit:
 
         count_len = int(log(count_len, 10).real + 1)
         percent_len = 4
+
+        # TODO: Print an explanation of the values
+        # * count                             The number of instructions
+        # * percent                           The percentage relative to total
+        #                                     (count / total)
+        #
+        # * total                             The number of all instructions
+        # * parsed                            The number of instructions which are used
+        #                                     to calculate the stack size.
+        #                                     Note: Only specific operations on the
+        #                                     stack will be counted here, while other
+        #                                     stack operations will be ignored.
+        #                                     E.g. only those operations which decrease
+        #                                     the stack are counted while operations
+        #                                     which increase it are ignored and will be
+        #                                     counted to "skipped".
+        #                                     (see also "potential stack operations")
+        # * skipped                           The complement of parsed.
+        #                                     (= total - parsed)
+        #   * potential stack operations      Some instructions might listed here which
+        #                                     are already covered by tracking the
+        #                                     counter part like
+        #                                     * pop and push
+        #                                     * add and sub
+        #                                     * add x... and add -x...
+        #                                     or are recovered by using another
+        #                                     opeartion like mov
+        #   * non-potential stack operations
 
         if show_header:
             self._print(
