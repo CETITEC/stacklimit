@@ -91,6 +91,8 @@ def main():
             sl.print_call_tree()
         else:
             sl.print_stack_table(args.show_header, args.show_section)
+        print()
+        sl.print_statistic(args.show_header)
     except KeyboardInterrupt:
         exit(130)
 

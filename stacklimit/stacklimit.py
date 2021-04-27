@@ -44,6 +44,32 @@ def get_arch(arch):
     return None
 
 
+class Statistic:
+    """Helper class to iterate easily through.
+
+    Attributes:
+        title (str):   the description of the count
+        count (int):   the number of occurrences
+        percent (int): the percentage of count related to number of instructions
+    """
+
+    title = None
+    count = 0
+    percent = 0
+
+    def __init__(self, title, count, percent):
+        """Create the object.
+
+        Args:
+            title (str):   the description of the count
+            count (int):   the number of occurrences
+            percent (int): the percentage of count related to number of instructions
+        """
+        self.title = title
+        self.count = count
+        self.percent = percent
+
+
 class Stacklimit:
     """Infrastructure to calculate the maximal stack size.
 
@@ -832,6 +858,78 @@ class Stacklimit:
                         address, name, section, file, size, total
                     ),
                 )
+
+    def print_statistic(self, show_header=False):
+        """Print statistic of the parsed instructions.
+
+        Args:
+            show_header (bool, optional):
+                Show the column headers of the table. Defaults to False.
+        """
+        total = self.stacktable.instructions.total
+
+        skipped = self.stacktable.instructions.skipped
+        skipped_percent = round(100 * float(skipped / total))
+
+        parsed = total - skipped
+        parsed_percent = 100 - skipped_percent
+
+        skipped_potential = self.stacktable.instructions.skipped_potential_stack_op
+        skipped_potential_percent = round(100 * float(skipped_potential / total))
+
+        non_skipped_potential = skipped - skipped_potential
+        non_skipped_potential_percent = skipped_percent - skipped_potential_percent
+
+        title_len = 8
+        count_len = 99999 if show_header else 1
+
+        statistics = [
+            Statistic("total", total, 100),
+            Statistic("parsed", parsed, parsed_percent),
+            Statistic("skipped", skipped, skipped_percent),
+            Statistic(
+                "  potential stack operations",
+                skipped_potential,
+                skipped_potential_percent,
+            ),
+            Statistic(
+                "  non-potential stack operations",
+                non_skipped_potential,
+                non_skipped_potential_percent,
+            ),
+        ]
+
+        for statistic in statistics:
+            title_len = max(len(statistic.title), title_len)
+            count_len = max(statistic.count, count_len)
+
+        count_len = int(log(count_len, 10).real + 1)
+        percent_len = 4
+
+        if show_header:
+            self._print(
+                Message.INFO,
+                "{:<{}} {:>{}} {:>{}}".format(
+                    "",
+                    title_len,
+                    "count",
+                    count_len,
+                    "%",
+                    percent_len,
+                ),
+            )
+
+        for statistic in statistics:
+            title = "{:{width}}".format(statistic.title, width=title_len)
+            count = "{:{width}}".format(statistic.count, width=count_len)
+            percent = self._bold(
+                "{:{width}}".format(statistic.percent, width=percent_len)
+            )
+
+            self._print(
+                Message.INFO,
+                "{} {} {}".format(title, count, percent),
+            )
 
     def print_call_tree(self):
         """Print the function call tree."""
