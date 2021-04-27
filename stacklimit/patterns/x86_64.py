@@ -12,7 +12,7 @@ class x86_64(x86):
 
     #   4004c3:   55                      push   %esp
     #   4004c3:   55                      pushq  %rbp
-    StackPushOp = ".*( |\t)+push(q|)( |\t)+"
+    StackPushOp = Pattern._operation("push(q|)( |\t)+")
 
     @staticmethod
     def get_stack_push_size(line):

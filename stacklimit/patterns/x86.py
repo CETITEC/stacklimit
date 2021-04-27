@@ -10,21 +10,21 @@ class x86(Pattern):
     arch = ["x86"]
 
     #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
-    FunctionCall = "^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  [0-9a-f]+ \<.*\>$"
+    FunctionCall = Pattern._operation("callq", "[0-9a-f]+ \<.*\>$")
 
     #   400804:   ff d0                   callq  *%rax
-    FunctionPointer = "^( )*[0-9a-f]*:( |\t|[0-9a-f])+callq  .*%.*$"
+    FunctionPointer = Pattern._operation("callq", ".*%.*$")
 
     #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
     #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
-    StackDynamicOp = ".*( |\t)+sub( |\t)+\%.*,\%(e|r)sp$"
+    StackDynamicOp = Pattern._operation("sub", "\%.*", "\%(e|r)sp$")
 
     #   4004c3:   55                      push   %esp
     #   4004c3:   55                      push   %rsp
-    StackPushOp = ".*( |\t)+push(l|)( |\t)+"
+    StackPushOp = Pattern._operation("push(l|)( |\t)+")
 
     #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
-    StackSubOp = ".*( |\t)+sub( |\t)+\$0x[0-9a-f]*,\%(e|r)sp$"
+    StackSubOp = Pattern._operation("sub", "\$0x[0-9a-f]*", "\%(e|r)sp$")
 
     @staticmethod
     def get_function_call(line):
