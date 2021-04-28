@@ -62,13 +62,33 @@ class x86(Pattern):
 
     #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
     #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
+    # TODO:
+    # * Only track stack decrements. This includes
+    #   > add "-x",%rsp
+    # * add(b|l|)
+    # * sub(b|l|)
+    # * mov...
+    # * ...
     StackDynamicOp = Pattern._operation("sub", "\%.*", "\%{}$".format(sp))
 
     #   4004c3:   55                      push   %esp
     #   4004c3:   55                      push   %rsp
+    # TODO:
+    # * pusha   push all general-purpose registers
+    # * pushad  push all general-purpose registers
+    # * pushf   push EFLAGS register onto the stack
+    # * pushfd  push EFLAGS register onto the stack
+    # * pushfq  push EFLAGS register onto the stack
     StackPushOp = Pattern._operation("push(l|)( |\t)+")
 
     #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
+    # TODO:
+    # * Only track stack decrements. This includes
+    #   > add "-x",%rsp
+    # * add(b|l|)
+    # * sub(b|l|)
+    # * mov...
+    # * ...
     StackSubOp = Pattern._operation("sub", "\$0x[0-9a-f]*", "\%{}$".format(sp))
 
     @staticmethod
