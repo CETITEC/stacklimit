@@ -1,6 +1,8 @@
 #!/bin/python3
 """Patterns for the x86 architecture."""
 
+import re
+
 from .base import Pattern
 
 
@@ -81,9 +83,29 @@ class x86(Pattern):
         return address, name
 
     @staticmethod
+    def _get_stack_push_size(line):
+        """Calculate how many bytes the stack will grow depending on the register."""
+        if re.match(".*( |\t)+%{}$".format(x86.reg8bytes), line):
+            return 8
+        elif re.match(".*( |\t)+%{}$".format(x86.reg4bytes), line):
+            return 4
+        elif re.match(".*( |\t)+%{}$".format(x86.reg2bytes), line):
+            return 2
+        elif re.match(".*( |\t)+%{}$".format(x86.reg1byte), line):
+            return 1
+        else:  # constant
+            return 0
+
+    @staticmethod
     def get_stack_push_size(line):
         """Implement Pattern.get_stack_push_size."""
-        return 4
+        size = x86._get_stack_push_size(line)
+
+        # Check if a constant was pushed on the stack
+        if size == 0:
+            size = 4
+
+        return size
 
     @staticmethod
     def get_stack_sub_size(line):
