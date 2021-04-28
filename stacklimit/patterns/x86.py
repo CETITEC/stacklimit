@@ -91,6 +91,21 @@ class x86(Pattern):
     # * ...
     StackSubOp = Pattern._operation("sub", "\$0x[0-9a-f]*", "\%{}$".format(sp))
 
+    # Some operations are already covered by tracking the counter part like
+    # * pop and push
+    # * add and sub
+    # * add reg and add -reg
+    # or are recovered by using another opeartion like mov
+    PotentialStackOp = (
+        # fmt: off
+          "(" + Pattern._operation("enter")
+        + "|" + Pattern._operation("fdecstp")  # ignore counter part fincstp
+        + "|" + Pattern._operation("push.*")
+        + "|" + Pattern._operation("^(pop)", "\%{}$".format(sp))  # Only track push and not pop
+        + ")"
+        # fmt: on
+    )
+
     @staticmethod
     def get_function_call(line):
         """Implement Pattern.get_function_call."""
