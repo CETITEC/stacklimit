@@ -12,6 +12,46 @@ class x86(Pattern):
     # Stack pointer
     sp = "(e|r|l|)sp"
 
+    # 1 byte registers
+    reg1byte = (
+        # fmt: off
+          "(" + "(a|b|c|d)(h|l)"
+        + "|" + "(bp|si|di|sp)l"
+        + "|" + "r(8|9|10|11|12|13|14|15)b"
+        + ")"
+        # fmt: on
+    )
+
+    # 2 bytes registers
+    reg2bytes = (
+        # fmt: off
+          "(" + "(a|b|c|d)x"
+        + "|" + "bp|si|di|sp"
+        + "|" + "r(8|9|10|11|12|13|14|15)w"
+        + ")"
+        # fmt: on
+    )
+
+    # 4 bytes registers
+    reg4bytes = (
+        # fmt: off
+          "(" + "e(a|b|c|d)x"
+        + "|" + "e(bp|si|di|sp)"
+        + "|" + "r(8|9|10|11|12|13|14|15)d"
+        + ")"
+        # fmt: on
+    )
+
+    # 8 bytes registers
+    reg8bytes = (
+        # fmt: off
+          "(" + "r(a|b|c|d)x"
+        + "|" + "r(bp|si|di|sp)"
+        + "|" + "r(8|9|10|11|12|13|14|15)"
+        + ")"
+        # fmt: on
+    )
+
     #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
     FunctionCall = Pattern._operation("callq", "[0-9a-f]+ \<.*\>$")
 
