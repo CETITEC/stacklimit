@@ -9,6 +9,9 @@ class x86(Pattern):
 
     arch = ["x86"]
 
+    # Stack pointer
+    sp = "(e|r|l|)sp"
+
     #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
     FunctionCall = Pattern._operation("callq", "[0-9a-f]+ \<.*\>$")
 
@@ -17,14 +20,14 @@ class x86(Pattern):
 
     #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
     #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
-    StackDynamicOp = Pattern._operation("sub", "\%.*", "\%(e|r)sp$")
+    StackDynamicOp = Pattern._operation("sub", "\%.*", "\%{}$".format(sp))
 
     #   4004c3:   55                      push   %esp
     #   4004c3:   55                      push   %rsp
     StackPushOp = Pattern._operation("push(l|)( |\t)+")
 
     #   4004aa:   48 83 ec 10             sub    $0x10,%rsp
-    StackSubOp = Pattern._operation("sub", "\$0x[0-9a-f]*", "\%(e|r)sp$")
+    StackSubOp = Pattern._operation("sub", "\$0x[0-9a-f]*", "\%{}$".format(sp))
 
     @staticmethod
     def get_function_call(line):
