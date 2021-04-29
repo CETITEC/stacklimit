@@ -81,6 +81,21 @@ class arm(Pattern):
     #      4bc:   a9bc7bfd    stp   x29, x30, [sp,#-64]!
     #      894:   a9af7bfd    stp   x29, x30, [sp,#-272]!
     #     4610:   f81d0ffe    str        x30, [sp, #-48]!
+    # TODO: str(ex|)(b|h|d|)(t|) ... sp
+    # TODO: adc(s|) ... sp
+    # TODO: sbc(s|) ... sp
+    # TODO: rsb(s|) ... sp
+    # TODO: rsc(s|) ... sp
+    # TODO: mov(s|k|) ... sp
+    # TODO: mvn(s|) ... sp
+    # TODO: neg(s|) ... sp
+    # TODO: st(u|)r(b|h|) ... sp
+    # TODO: st(l|)r(b|h|) ... sp
+    # TODO: st(l|)r(b|h|) ... sp
+    # TODO: st(l|)xp ... sp
+    # TODO: st(l|)xr(b|h) ... sp
+    # TODO: stnp ... sp
+    # TODO: sttr(b|h|) ... sp
     StackSubOp = (
         # fmt: off
           "(" + Pattern._operation("stp", "x[0-9]+", "[a-z]([a-z]|[0-9]+)", "\[{}, \#-(0x[0-9a-f]+|[0-9]+)\]".format(sp))
