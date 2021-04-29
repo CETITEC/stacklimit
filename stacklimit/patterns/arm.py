@@ -135,12 +135,19 @@ class arm(Pattern):
 
     @staticmethod
     def get_stack_push_size(line):
-        """Implement Pattern.get_stack_push_size."""
+        """Implement Pattern.get_stack_push_size.
+
+        PUSH and POP are only available in A32 / T32 and not in A64.
+        """
         return 4 * arm.get_stack_push_count(line)
 
     @staticmethod
     def get_stack_sub_size(line):
-        """Implement Pattern.get_stack_sub_size."""
+        """Implement Pattern.get_stack_sub_size.
+
+        The registers must be further qualified to indicate the operand data size (32 or
+        64 bits) – and hence the instruction's data size.
+        """
         temp = line.split("#")[-1]
         temp = temp.split("\n")[0]
         temp = temp.split("\t")[0]
