@@ -84,7 +84,7 @@ class arm(Pattern):
     StackSubOp = (
         # fmt: off
           "(" + Pattern._operation("stp", "x[0-9]+", "[a-z]([a-z]|[0-9]+)", "\[{}, \#-(0x[0-9a-f]+|[0-9]+)\]".format(sp))
-        + "|" + Pattern._operation("str(.w|w|s|)", "[a-z]([a-z]|[0-9]+)", "\[{}, \#-(0x[0-9a-f]+|[0-9]+)\]".format(sp))
+        + "|" + Pattern._operation("str(ex|)(.w|w|s|)", "[a-z]([a-z]|[0-9]+)", "\[{}, \#-(0x[0-9a-f]+|[0-9]+)\]".format(sp))
         + "|" + Pattern._operation("sub(.w|w|s|)", sp, sp, "\#(0x[0-9a-f]|[0-9]+)")
         + "|" + Pattern._operation("add(.w|w|s|)", sp, sp, "\#-(0x[0-9a-f]|[0-9]+)")
         + ")"
