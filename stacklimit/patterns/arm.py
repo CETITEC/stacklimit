@@ -24,6 +24,24 @@ class arm(Pattern):
     # Stack pointer
     sp = "(w|)sp"
 
+    # General purpose 4 byte (integer) registers
+    # Ignore the "zero" register w31, since it won't influence the stack
+    reg4bytes = (
+        # fmt: off
+          "(" + "w((|1|2)(0|1|2|3|4|5|6|7|8|9)|30)"
+        + ")"
+        # fmt: on
+    )
+
+    # General purpose 8 byte (integer) registers
+    # Ignore the "zero" register x31, since it won't influence the stack
+    reg8bytes = (
+        # fmt: off
+          "(" + "x((|1|2)(0|1|2|3|4|5|6|7|8|9)|30)"
+        + ")"
+        # fmt: on
+    )
+
     #   1069c:   ebffff80        bl      104a4 <func_alpha>
     # TODO: Test cbz and cbnz
     FunctionCall = (
