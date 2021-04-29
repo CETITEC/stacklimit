@@ -20,7 +20,7 @@ class x86(Pattern):
     # Stack pointer
     sp = "(e|r|l|)sp"
 
-    # 1 byte registers
+    # General purpose 1 byte (integer) registers
     reg1byte = (
         # fmt: off
           "(" + "(a|b|c|d)(h|l)"
@@ -30,7 +30,7 @@ class x86(Pattern):
         # fmt: on
     )
 
-    # 2 bytes registers
+    # General purpose 2 byte (integer) registers
     reg2bytes = (
         # fmt: off
           "(" + "(a|b|c|d)x"
@@ -40,7 +40,7 @@ class x86(Pattern):
         # fmt: on
     )
 
-    # 4 bytes registers
+    # General purpose 4 byte (integer) registers
     reg4bytes = (
         # fmt: off
           "(" + "e(a|b|c|d)x"
@@ -50,7 +50,7 @@ class x86(Pattern):
         # fmt: on
     )
 
-    # 8 bytes registers
+    # General purpose 8 byte (integer) registers
     reg8bytes = (
         # fmt: off
           "(" + "r(a|b|c|d)x"
