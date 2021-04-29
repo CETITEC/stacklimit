@@ -1,5 +1,5 @@
 #!/bin/python3
-"""Patterns for the x86 architecture."""
+"""Patterns for the x86 32bit and 64bit architecture."""
 
 import re
 
@@ -7,7 +7,13 @@ from .base import Pattern
 
 
 class x86(Pattern):
-    """Contain the x86 instruction set."""
+    """Contain the x86 instruction set.
+
+    Both 32 bit and 64 bit registers and instruction sets are covered.
+
+    Instructions which depends on the architecture and cannot be determine on the
+    register name or operation are splitted into x86 (this class) and x86_64.
+    """
 
     arch = ["x86"]
 

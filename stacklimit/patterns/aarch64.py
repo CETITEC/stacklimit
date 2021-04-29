@@ -1,12 +1,15 @@
 #!/bin/python3
-"""Patterns for the aarch64 architecture."""
+"""Patterns for the ARM 64bit (aka AArch64) architecture."""
 
 from .arm import arm
 from .base import Pattern
 
 
 class aarch64(arm):
-    """Contain the aarch64 instruction sets."""
+    """Extend the arm class with the ARM A64 instruction set.
+
+    This extends the arm class with 64bit related properties.
+    """
 
     arch = ["aarch64"]
 

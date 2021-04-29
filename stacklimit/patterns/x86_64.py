@@ -1,5 +1,5 @@
 #!/bin/python3
-"""Patterns for the x86_64 architecture."""
+"""Patterns for the x86 64bit architecture."""
 
 import re
 
@@ -8,7 +8,10 @@ from .x86 import x86
 
 
 class x86_64(x86):
-    """Contain the x86 64bit instruction set."""
+    """Extend the x86 class with the x86 64bit instruction set.
+
+    This extends the x86 class with 64bit related properties.
+    """
 
     arch = ["x86_64"]
 

@@ -1,11 +1,23 @@
 #!/bin/python3
-"""Patterns for the arm architecture."""
+"""Patterns for the ARM 32bit (aka AArch 32) and 64bit (aka AArch64) architecture."""
 
 from .base import Pattern
 
 
 class arm(Pattern):
-    """Contain the ARM and Thumb instruction sets."""
+    """Contain the A32, T32 and A64 instruction set of the ARM architecture.
+
+    Both 32 bit and 64 registers are covered. Further the following instruction sets are
+    considered:
+    * AArch32
+      * A32 (previously known as ARM)
+      * T32 (previously known as Thumb2)
+    * AArch64
+      * A64
+
+    Instructions which depends on the architecture and cannot be determine on the
+    register name or operation are splitted into arm (this class) and aarch64.
+    """
 
     arch = ["arm"]
 
