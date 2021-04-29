@@ -21,6 +21,9 @@ class arm(Pattern):
 
     arch = ["arm"]
 
+    # Stack pointer
+    sp = "(w|)sp"
+
     #   1069c:   ebffff80        bl      104a4 <func_alpha>
     # TODO: Test cbz and cbnz
     FunctionCall = (
@@ -47,7 +50,7 @@ class arm(Pattern):
     StackPushOp = (
         # fmt: off
           "(" + Pattern._operation("push(|[a-z]{2})")
-        + "|" + Pattern._operation("stm(ia|ib|da|db)(.w|w|s|)", "sp")
+        + "|" + Pattern._operation("stm(ia|ib|da|db)(.w|w|s|)", sp)
         + ")"
         # fmt: on
     )
@@ -62,10 +65,10 @@ class arm(Pattern):
     #     4610:   f81d0ffe    str        x30, [sp, #-48]!
     StackSubOp = (
         # fmt: off
-          "(" + Pattern._operation("stp", "x[0-9]+", "[a-z]([a-z]|[0-9]+)", "\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]")
-        + "|" + Pattern._operation("str(.w|w|s|)", "[a-z]([a-z]|[0-9]+)", "\[sp, \#-(0x[0-9a-f]+|[0-9]+)\]")
-        + "|" + Pattern._operation("sub(.w|w|s|)", "sp", "sp", "\#(0x[0-9a-f]|[0-9]+)")
-        + "|" + Pattern._operation("add(.w|w|s|)", "sp", "sp", "\#-(0x[0-9a-f]|[0-9]+)")
+          "(" + Pattern._operation("stp", "x[0-9]+", "[a-z]([a-z]|[0-9]+)", "\[{}, \#-(0x[0-9a-f]+|[0-9]+)\]".format(sp))
+        + "|" + Pattern._operation("str(.w|w|s|)", "[a-z]([a-z]|[0-9]+)", "\[{}, \#-(0x[0-9a-f]+|[0-9]+)\]".format(sp))
+        + "|" + Pattern._operation("sub(.w|w|s|)", sp, sp, "\#(0x[0-9a-f]|[0-9]+)")
+        + "|" + Pattern._operation("add(.w|w|s|)", sp, sp, "\#-(0x[0-9a-f]|[0-9]+)")
         + ")"
         # fmt: on
     )
