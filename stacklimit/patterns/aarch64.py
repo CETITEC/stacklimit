@@ -9,6 +9,9 @@ class aarch64(arm):
     """Extend the arm class with the ARM A64 instruction set.
 
     This extends the arm class with 64bit related properties.
+
+    Note: The instructions LDM, STM, PUSH and POP doesn't exist in A64. Therefore the
+    instructions LDP and STP are used to load and store a pair of registers.
     """
 
     arch = ["aarch64"]
@@ -16,7 +19,7 @@ class aarch64(arm):
     @staticmethod
     def get_stack_push_size(line):
         """Implement Pattern.get_stack_push_size."""
-        return 8 * arm.get_stack_push_count(line)
+        raise RuntimeError("The instruction PUSH doesn't exist in A64!")
 
     @staticmethod
     def get_stack_sub_size(line):
