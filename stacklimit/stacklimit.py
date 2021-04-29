@@ -688,6 +688,7 @@ class Stacklimit:
                 size = pattern.get_stack_push_size(line)
                 current.size += size
 
+            # TODO: Only track sub with positive numbers and add with negative numbers
             # Note: We ignore all 'add' operations. We're only interested in 'sub'.
             elif pattern.StackSubOp and re.match(pattern.StackSubOp, line):
                 self._print(Message.DEBUG, "  StackSubOp      ", line)
