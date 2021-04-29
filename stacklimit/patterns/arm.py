@@ -91,6 +91,19 @@ class arm(Pattern):
         # fmt: on
     )
 
+    # Some operations are already covered by tracking the counter part like
+    # * pop and push
+    # * add and sub
+    # * add reg and add -reg
+    # or are recovered by using another opeartion like mov
+    PotentialStackOp = (
+        # fmt: off
+          "(" + Pattern._operation("push.*")
+        + "|" + Pattern._operation("^(ldm|ldp|ldrex|pop)", "\%{}$".format(sp))  # Only track st*/push and not ld*/pop
+        + ")"
+        # fmt: on
+    )
+
     @staticmethod
     def get_function_call(line):
         """Implement Pattern.get_function_call."""
