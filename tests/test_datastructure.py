@@ -1,4 +1,4 @@
-"""Test cases for methods and classes defined in stacklimit.py file."""
+"""Test cases for methods and classes defined in datastructure.py file."""
 
 import itertools
 import operator
