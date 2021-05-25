@@ -16,13 +16,7 @@ repos:
     rev: 5.7.0
     hooks:
       - id: isort
-        name: isort (python)
-      - id: isort
-        name: isort (cython)
-        types: [cython]
-      - id: isort
-        name: isort (pyi)
-        types: [pyi]
+        name: isort
   - repo: https://github.com/pycqa/pydocstyle
     rev: 5.1.1
     hooks:
