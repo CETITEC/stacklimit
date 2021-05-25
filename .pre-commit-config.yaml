@@ -21,3 +21,11 @@ repos:
     rev: 5.1.1
     hooks:
       - id: pydocstyle
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest --cov=stacklimit
+        language: system
+        pass_filenames: false
+        always_run: true
