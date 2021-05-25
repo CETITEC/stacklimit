@@ -68,7 +68,6 @@ Tools:
 * [Poetry](https://python-poetry.org): build tool
 * [black](https://pypi.org/project/black): code formatter
 * [isort](https://pypi.org/project/isort): imports sorter
-* [itertools](https://pypi.org/project/itertools): testing
 * [pre-commit](https://pypi.org/project/pre-commit): pre-commit hooks for git
 * [pydocstyle](https://pypi.org/project/pydocstyle): docstring style checker
 * [pytest](https://pypi.org/project/pytest): testing
