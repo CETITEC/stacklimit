@@ -77,3 +77,23 @@ To install all develop dependencies, use [Poetry](https://python-poetry.org):
 ```
 poetry install
 ```
+
+Unit tests
+----------
+
+For testing the framework pytest is used.
+
+To run all tests, just execute
+```
+poetry run pytest
+```
+
+To print the coverage, too, run
+```
+poetry run pytest --cov=stacklimit
+```
+
+And to generate a coverage report in XML, which can be used further, run
+```
+poetry run pytest --cov=stacklimit --cov-report=xml tests
+```
