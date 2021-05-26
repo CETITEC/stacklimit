@@ -70,6 +70,7 @@ class Pattern(ABC):
             args (list[str]):
                 The instruction with a variable number of registers. The first element
                 is the instruction. The following elements are the registers.
+                The instruction is mandatory, the instructions are optional.
 
         Returns:
             str: the operation
