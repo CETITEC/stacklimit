@@ -914,7 +914,7 @@ class Stacklimit:
                 skipped_potential_percent,
             ),
             Statistic(
-                "  non-potential stack operations",
+                "  unexpected stack manipulation",
                 non_skipped_potential,
                 non_skipped_potential_percent,
             ),
@@ -953,7 +953,7 @@ class Stacklimit:
         #                                     * add x... and add -x...
         #                                     or are recovered by using another
         #                                     opeartion like mov
-        #   * non-potential stack operations
+        #   * unexpected stack manipulation
 
         if show_header:
             self._print(
