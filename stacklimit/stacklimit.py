@@ -977,7 +977,7 @@ class Stacklimit:
 
             self._print(
                 Message.INFO,
-                "{} {} {}".format(title, count, percent),
+                "{} {} {}%".format(title, count, percent),
             )
 
     def print_call_tree(self):
