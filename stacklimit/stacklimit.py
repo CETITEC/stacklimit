@@ -8,26 +8,11 @@ from cmath import log
 from os import environ, listdir
 from os.path import isfile
 
-from datastructure import Stack, Visitor
+from datastructure import Stack, StackOperation, Visitor
 from output import Color, Message
 from patterns import Pattern, aarch64, arm, x86, x86_64
 
 PATH = [path + "/" for path in ["."] + environ["PATH"].split(":")]
-
-
-class StackOperation:
-    """Status of the stack operation.
-
-    No:         no stack operation recognized or considered
-    Clear:      stack operation recognized and considered correctly
-    Weak:       stack operation recognized, but not considered correctly
-    Potential:  potential stack operation recognized, but not considered
-    """
-
-    No = 0
-    Clear = 1
-    Weak = 2
-    Potential = 3
 
 
 def get_arch(arch):

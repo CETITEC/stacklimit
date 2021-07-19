@@ -4,6 +4,21 @@
 MAX_NAME_LEN = 64
 
 
+class StackOperation:
+    """Status of the stack operation.
+
+    No:         no stack operation recognized or considered
+    Clear:      stack operation recognized and considered correctly
+    Weak:       stack operation recognized, but not considered correctly
+    Potential:  potential stack operation recognized, but not considered
+    """
+
+    No = 0
+    Clear = 1
+    Weak = 2
+    Potential = 3
+
+
 class Visitor:
     """Visit each node of the tree, which represents all recursive function calls.
 
