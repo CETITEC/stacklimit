@@ -139,25 +139,24 @@ class Stack:
         """Statistic about operation codes of a binary.
 
         Attributes:
-            total (int):
-                the number of all instructions
-            clear (int):
+            statistic[StackManipulation.No] (int):
+                the number of skipped instructions, which don't manipulate the stack
+            statistic[StackManipulation.Clear] (int):
                 the number of instructions which increase the stack with the known
                 amount of bytes
-            weak (int):
+            statistic[StackManipulation.Weak] (int):
                 the number of instructions which increase the stack, but the stack
                 increase can't be calculated
-            skipped_clear (int):
-                the number of skipped instructions, which don't manipulate the stack
-            skipped_potential (int):
+            statistic[StackManipulation.Potential] (int):
                 the number of skipped potential stack instructions
         """
 
-        total = 0
-        clear = 0
-        weak = 0
-        skipped_clear = 0
-        skipped_potential = 0
+        per_stack_manipulation = {
+            StackManipulation.No: 0,
+            StackManipulation.Clear: 0,
+            StackManipulation.Weak: 0,
+            StackManipulation.Potential: 0,
+        }
 
     class Function:
         """A function of a binary.

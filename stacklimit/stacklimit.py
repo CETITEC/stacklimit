@@ -534,25 +534,21 @@ class Stacklimit:
     # * 4. column:  output of objdump
     #   * byte increase of the stack
     def _track_operation(self, pattern, line, stack_operation, size=None):
-        self.stacktable.statistic.total += 1
 
         if stack_operation is StackManipulation.Clear:
-            self.stacktable.statistic.clear += 1
             check_text = self._attribute_ok("clear")
         elif stack_operation is StackManipulation.Weak:
-            self.stacktable.statistic.weak += 1
             check_text = self._attribute_warn("weak ")
         elif stack_operation is StackManipulation.Potential:
-            self.stacktable.statistic.skipped_potential += 1
             check_text = self._attribute_note("pot. ")
         elif stack_operation is StackManipulation.No:
-            self.stacktable.statistic.skipped_clear += 1
             check_text = "     "
         else:
             raise ValueError(
                 "Unknown StackManipulation state {}.".format(stack_operation)
             )
 
+        self.stacktable.statistic.per_stack_manipulation[stack_operation] += 1
         size_text = "     "
         if size:
             size_text = self._bold("+{:>{}}B".format(size, 3))
@@ -943,18 +939,24 @@ class Stacklimit:
             show_header (bool, optional):
                 Show the column headers of the table. Defaults to False.
         """
-        total = self.stacktable.statistic.total
+        total = sum(self.stacktable.statistic.per_stack_manipulation.values())
 
-        clear = self.stacktable.statistic.clear
+        clear = self.stacktable.statistic.per_stack_manipulation[
+            StackManipulation.Clear
+        ]
         clear_percent = round(100 * float(clear / total))
 
-        weak = self.stacktable.statistic.weak
+        weak = self.stacktable.statistic.per_stack_manipulation[StackManipulation.Weak]
         weak_percent = round(100 * float(weak / total))
 
-        skipped_clear = self.stacktable.statistic.skipped_clear
+        skipped_clear = self.stacktable.statistic.per_stack_manipulation[
+            StackManipulation.No
+        ]
         skipped_clear_percent = round(100 * float(skipped_clear / total))
 
-        skipped_potential = self.stacktable.statistic.skipped_potential
+        skipped_potential = self.stacktable.statistic.per_stack_manipulation[
+            StackManipulation.Potential
+        ]
         skipped_potential_percent = round(100 * float(skipped_potential / total))
 
         skipped = skipped_clear + skipped_potential
