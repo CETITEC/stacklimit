@@ -4,7 +4,7 @@
 MAX_NAME_LEN = 64
 
 
-class StackOperation:
+class StackManipulation:
     """Status of the stack operation.
 
     No:         no stack operation recognized or considered

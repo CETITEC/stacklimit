@@ -8,7 +8,7 @@ from cmath import log
 from os import environ, listdir
 from os.path import isfile
 
-from datastructure import Stack, StackOperation, Visitor
+from datastructure import Stack, StackManipulation, Visitor
 from output import Color, Message
 from patterns import Pattern, aarch64, arm, x86, x86_64
 
@@ -536,20 +536,22 @@ class Stacklimit:
     def _track_operation(self, pattern, line, stack_operation, size=None):
         self.stacktable.statistic.total += 1
 
-        if stack_operation is StackOperation.Clear:
+        if stack_operation is StackManipulation.Clear:
             self.stacktable.statistic.clear += 1
             check_text = self._attribute_ok("clear")
-        elif stack_operation is StackOperation.Weak:
+        elif stack_operation is StackManipulation.Weak:
             self.stacktable.statistic.weak += 1
             check_text = self._attribute_warn("weak ")
-        elif stack_operation is StackOperation.Potential:
+        elif stack_operation is StackManipulation.Potential:
             self.stacktable.statistic.skipped_potential += 1
             check_text = self._attribute_note("pot. ")
-        elif stack_operation is StackOperation.No:
+        elif stack_operation is StackManipulation.No:
             self.stacktable.statistic.skipped_clear += 1
             check_text = "     "
         else:
-            raise ValueError("Unknown StackOperation state {}.".format(stack_operation))
+            raise ValueError(
+                "Unknown StackManipulation state {}.".format(stack_operation)
+            )
 
         size_text = "     "
         if size:
@@ -742,7 +744,9 @@ class Stacklimit:
             if pattern.StackPushOp and re.match(pattern.StackPushOp, line):
                 size = pattern.get_stack_push_size(line)
                 current.size += size
-                self._track_operation("StackPushOp", line, StackOperation.Clear, size)
+                self._track_operation(
+                    "StackPushOp", line, StackManipulation.Clear, size
+                )
 
             # TODO: Only track sub with positive numbers and add with negative numbers
             # Note: We ignore all 'add' operations. We're only interested in 'sub'.
@@ -766,11 +770,11 @@ class Stacklimit:
                     continue
 
                 current.size += size
-                self._track_operation("StackSubOp", line, StackOperation.Clear, size)
+                self._track_operation("StackSubOp", line, StackManipulation.Clear, size)
 
             elif pattern.StackDynamicOp and re.match(pattern.StackDynamicOp, line):
                 current.dynamic = True
-                self._track_operation("StackDynamicOp", line, StackOperation.Weak)
+                self._track_operation("StackDynamicOp", line, StackManipulation.Weak)
 
             elif pattern.FunctionCall and re.match(pattern.FunctionCall, line):
                 (address, name) = pattern.get_function_call(line)
@@ -785,21 +789,21 @@ class Stacklimit:
                     current.calls.append(function)
                     function.returns.append(current)
 
-                self._track_operation("FunctionCall", line, StackOperation.Weak)
+                self._track_operation("FunctionCall", line, StackManipulation.Weak)
 
             elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
 
-                self._track_operation("FunctionPointer", line, StackOperation.Weak)
+                self._track_operation("FunctionPointer", line, StackManipulation.Weak)
 
             elif pattern.PotentialStackOp and re.match(pattern.PotentialStackOp, line):
                 self._track_operation(
-                    "PotentialStackOp", line, StackOperation.Potential
+                    "PotentialStackOp", line, StackManipulation.Potential
                 )
             else:
-                self._track_operation("", line, StackOperation.No)
+                self._track_operation("", line, StackManipulation.No)
 
         for function in [
             function
