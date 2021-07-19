@@ -534,20 +534,22 @@ class Stacklimit:
     # * 4. column:  output of objdump
     #   * byte increase of the stack
     def _track_operation(self, pattern, line, stack_operation, size=None):
-        self.stacktable.instructions.total += 1
+        self.stacktable.statistic.total += 1
 
-        check_text = "     "
         if stack_operation is StackOperation.Clear:
-            self.stacktable.instructions.clear += 1
+            self.stacktable.statistic.clear += 1
             check_text = self._attribute_ok("clear")
         elif stack_operation is StackOperation.Weak:
-            self.stacktable.instructions.weak += 1
+            self.stacktable.statistic.weak += 1
             check_text = self._attribute_warn("weak ")
         elif stack_operation is StackOperation.Potential:
-            self.stacktable.instructions.skipped_potential += 1
+            self.stacktable.statistic.skipped_potential += 1
             check_text = self._attribute_note("pot. ")
+        elif stack_operation is StackOperation.No:
+            self.stacktable.statistic.skipped_clear += 1
+            check_text = "     "
         else:
-            self.stacktable.instructions.skipped_clear += 1
+            raise ValueError("Unknown StackOperation state {}.".format(stack_operation))
 
         size_text = "     "
         if size:
@@ -937,18 +939,18 @@ class Stacklimit:
             show_header (bool, optional):
                 Show the column headers of the table. Defaults to False.
         """
-        total = self.stacktable.instructions.total
+        total = self.stacktable.statistic.total
 
-        clear = self.stacktable.instructions.clear
+        clear = self.stacktable.statistic.clear
         clear_percent = round(100 * float(clear / total))
 
-        weak = self.stacktable.instructions.weak
+        weak = self.stacktable.statistic.weak
         weak_percent = round(100 * float(weak / total))
 
-        skipped_clear = self.stacktable.instructions.skipped_clear
+        skipped_clear = self.stacktable.statistic.skipped_clear
         skipped_clear_percent = round(100 * float(skipped_clear / total))
 
-        skipped_potential = self.stacktable.instructions.skipped_potential
+        skipped_potential = self.stacktable.statistic.skipped_potential
         skipped_potential_percent = round(100 * float(skipped_potential / total))
 
         skipped = skipped_clear + skipped_potential
