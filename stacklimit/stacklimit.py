@@ -239,6 +239,24 @@ class Stacklimit:
 
         self._print(Message.DEBUG, "Using '" + self._bold(self.objdump_path) + "'")
 
+    def _attribute_note(self, msg):
+        if self.color:
+            return Color.YELLOW + msg + Color.END
+        else:
+            return msg
+
+    def _attribute_ok(self, msg):
+        if self.color:
+            return Color.GREEN + msg + Color.END
+        else:
+            return msg
+
+    def _attribute_warn(self, msg):
+        if self.color:
+            return Color.RED + msg + Color.END
+        else:
+            return msg
+
     def _bold(self, msg):
         if self.color:
             return Color.BOLD + msg + Color.END
