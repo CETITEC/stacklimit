@@ -126,19 +126,23 @@ class Stack:
         Attributes:
             total (int):
                 the number of all instructions
-            skipped (int):
-                the number of skipped instructions
-                (skipped potential stack instructions included)
-            skipped_potential_stack_op (int):
+            clear (int):
+                the number of instructions which increase the stack with the known
+                amount of bytes
+            weak (int):
+                the number of instructions which increase the stack, but the stack
+                increase can't be calculated
+            skipped_clear (int):
+                the number of skipped instructions, which don't manipulate the stack
+            skipped_potential (int):
                 the number of skipped potential stack instructions
         """
 
-        # total = None
-        # skipped = None
-        # potential_stack_op = None
         total = 0
-        skipped = 0
-        skipped_potential_stack_op = 0
+        clear = 0
+        weak = 0
+        skipped_clear = 0
+        skipped_potential = 0
 
     class Function:
         """A function of a binary.

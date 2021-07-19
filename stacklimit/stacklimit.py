@@ -536,20 +536,33 @@ class Stacklimit:
 
         return function.section == ".text" and function.name not in Pattern.os_functions
 
+    # TODO: Print an explanation of the debug values
+    # * 1. column:  Result if the instruction was detected as a stack instruction.
+    #   * clear:    The instruction was detected as a stack instruction and the stack
+    #               increase could be calculated successfully. No mistakes expected.
+    #   * weak:     The instruction was detected as a stack instruction, but the stack
+    #               increase couldn't be calculated.
+    #   * pot.:     The instruction might be a stack operation, but was ignored.
+    #   * (empty):  The instruction wasn't detected as a stack instruction.
+    # * 2. column:  the sort of the detected stack operation
+    # * 3. column:  how much the stack will grow
+    # * 4. column:  output of objdump
+    #   * byte increase of the stack
     def _track_operation(self, pattern, line, stack_operation, size=None):
         self.stacktable.instructions.total += 1
 
         check_text = "     "
         if stack_operation is StackOperation.Clear:
+            self.stacktable.instructions.clear += 1
             check_text = self._attribute_ok("clear")
         elif stack_operation is StackOperation.Weak:
+            self.stacktable.instructions.weak += 1
             check_text = self._attribute_warn("weak ")
         elif stack_operation is StackOperation.Potential:
+            self.stacktable.instructions.skipped_potential += 1
             check_text = self._attribute_note("pot. ")
-            self.stacktable.instructions.skipped += 1
-            self.stacktable.instructions.skipped_potential_stack_op += 1
         else:
-            self.stacktable.instructions.skipped += 1
+            self.stacktable.instructions.skipped_clear += 1
 
         size_text = "     "
         if size:
@@ -941,24 +954,28 @@ class Stacklimit:
         """
         total = self.stacktable.instructions.total
 
-        skipped = self.stacktable.instructions.skipped
-        skipped_percent = round(100 * float(skipped / total))
+        clear = self.stacktable.instructions.clear
+        clear_percent = round(100 * float(clear / total))
 
-        parsed = total - skipped
-        parsed_percent = 100 - skipped_percent
+        weak = self.stacktable.instructions.weak
+        weak_percent = round(100 * float(weak / total))
 
-        skipped_potential = self.stacktable.instructions.skipped_potential_stack_op
+        skipped_clear = self.stacktable.instructions.skipped_clear
+        skipped_clear_percent = round(100 * float(skipped_clear / total))
+
+        skipped_potential = self.stacktable.instructions.skipped_potential
         skipped_potential_percent = round(100 * float(skipped_potential / total))
 
-        non_skipped_potential = skipped - skipped_potential
-        non_skipped_potential_percent = skipped_percent - skipped_potential_percent
+        skipped = skipped_clear + skipped_potential
+        skipped_percent = skipped_clear_percent + skipped_potential_percent
 
         title_len = 8
         count_len = 99999 if show_header else 1
 
         statistics = [
             Statistic("total", total, 100),
-            Statistic("parsed", parsed, parsed_percent),
+            Statistic("clear", clear, clear_percent),
+            Statistic("weak (unknown stack manipulation)", weak, weak_percent),
             Statistic("skipped", skipped, skipped_percent),
             Statistic(
                 "  potential stack operations",
@@ -967,8 +984,8 @@ class Stacklimit:
             ),
             Statistic(
                 "  unexpected stack manipulation",
-                non_skipped_potential,
-                non_skipped_potential_percent,
+                skipped_clear,
+                skipped_clear_percent,
             ),
         ]
 
@@ -985,7 +1002,7 @@ class Stacklimit:
         #                                     (count / total)
         #
         # * total                             The number of all instructions
-        # * parsed                            The number of instructions which are used
+        # * clear                             The number of instructions which are used
         #                                     to calculate the stack size.
         #                                     Note: Only specific operations on the
         #                                     stack will be counted here, while other
@@ -995,8 +1012,12 @@ class Stacklimit:
         #                                     which increase it are ignored and will be
         #                                     counted to "skipped".
         #                                     (see also "potential stack operations")
+        # * weak                              The number of instructions which
+        #                                     manipulates the stack, but it's unclear
+        #                                     how many bytes they will increase the
+        #                                     stack.
         # * skipped                           The complement of parsed.
-        #                                     (= total - parsed)
+        #                                     (= total - clear - weak)
         #   * potential stack operations      Some instructions might listed here which
         #                                     are already covered by tracking the
         #                                     counter part like
