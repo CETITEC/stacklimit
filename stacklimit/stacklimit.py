@@ -15,6 +15,21 @@ from patterns import Pattern, aarch64, arm, x86, x86_64
 PATH = [path + "/" for path in ["."] + environ["PATH"].split(":")]
 
 
+class StackOperation:
+    """Status of the stack operation.
+
+    No:         no stack operation recognized or considered
+    Clear:      stack operation recognized and considered correctly
+    Weak:       stack operation recognized, but not considered correctly
+    Potential:  potential stack operation recognized, but not considered
+    """
+
+    No = 0
+    Clear = 1
+    Weak = 2
+    Potential = 3
+
+
 def get_arch(arch):
     """Determine the architecture.
 
@@ -521,6 +536,31 @@ class Stacklimit:
 
         return function.section == ".text" and function.name not in Pattern.os_functions
 
+    def _track_operation(self, pattern, line, stack_operation, size=None):
+        self.stacktable.instructions.total += 1
+
+        check_text = "     "
+        if stack_operation is StackOperation.Clear:
+            check_text = self._attribute_ok("clear")
+        elif stack_operation is StackOperation.Weak:
+            check_text = self._attribute_warn("weak ")
+        elif stack_operation is StackOperation.Potential:
+            check_text = self._attribute_note("pot. ")
+            self.stacktable.instructions.skipped += 1
+            self.stacktable.instructions.skipped_potential_stack_op += 1
+        else:
+            self.stacktable.instructions.skipped += 1
+
+        size_text = "     "
+        if size:
+            size_text = self._bold("+{:>{}}B".format(size, 3))
+
+        self._print(
+            Message.DEBUG,
+            "  {} {:<{}} {}".format(check_text, pattern, 16, size_text),
+            line,
+        )
+
     def _handle_dynamic(self, callstack):
         current = callstack[-1]
 
@@ -699,17 +739,14 @@ class Stacklimit:
 
             # Analyze the instruction
 
-            self.stacktable.instructions.total += 1
-
             if pattern.StackPushOp and re.match(pattern.StackPushOp, line):
-                self._print(Message.DEBUG, "  StackPushOp     ", line)
                 size = pattern.get_stack_push_size(line)
                 current.size += size
+                self._track_operation("StackPushOp", line, StackOperation.Clear, size)
 
             # TODO: Only track sub with positive numbers and add with negative numbers
             # Note: We ignore all 'add' operations. We're only interested in 'sub'.
             elif pattern.StackSubOp and re.match(pattern.StackSubOp, line):
-                self._print(Message.DEBUG, "  StackSubOp      ", line)
                 temp = pattern.get_stack_sub_size(line)
                 if temp[:2] == "0x":
                     size = int(temp, 16)
@@ -729,14 +766,13 @@ class Stacklimit:
                     continue
 
                 current.size += size
+                self._track_operation("StackSubOp", line, StackOperation.Clear, size)
 
             elif pattern.StackDynamicOp and re.match(pattern.StackDynamicOp, line):
-                self._print(Message.DEBUG, "  StackDynamicOp  ", line)
                 current.dynamic = True
+                self._track_operation("StackDynamicOp", line, StackOperation.Weak)
 
             elif pattern.FunctionCall and re.match(pattern.FunctionCall, line):
-                self._print(Message.DEBUG, "  FunctionCall    ", line)
-
                 (address, name) = pattern.get_function_call(line)
                 function = self.stacktable.find(address)
 
@@ -749,23 +785,21 @@ class Stacklimit:
                     current.calls.append(function)
                     function.returns.append(current)
 
-            elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
-                self._print(Message.DEBUG, "  FunctionPointer ", line)
+                self._track_operation("FunctionCall", line, StackOperation.Weak)
 
+            elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
 
-            else:
-                self.stacktable.instructions.skipped += 1
+                self._track_operation("FunctionPointer", line, StackOperation.Weak)
 
-                if pattern.PotentialStackOp and re.match(
-                    pattern.PotentialStackOp, line
-                ):
-                    self._print(Message.DEBUG, "  PotentialStackOp", line)
-                    self.stacktable.instructions.skipped_potential_stack_op += 1
-                else:
-                    self._print(Message.DEBUG, "                  ", line)
+            elif pattern.PotentialStackOp and re.match(pattern.PotentialStackOp, line):
+                self._track_operation(
+                    "PotentialStackOp", line, StackOperation.Potential
+                )
+            else:
+                self._track_operation("", line, StackOperation.No)
 
         for function in [
             function
