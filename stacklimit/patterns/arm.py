@@ -106,6 +106,23 @@ class arm(Pattern):
         # fmt: on
     )
 
+    # TODO: str(ex|)(b|h|d|)(t|) ... sp
+    # TODO: adc(s|) ... sp
+    # TODO: sbc(s|) ... sp
+    # TODO: rsb(s|) ... sp
+    # TODO: rsc(s|) ... sp
+    # TODO: mov(s|k|) ... sp
+    # TODO: mvn(s|) ... sp
+    # TODO: neg(s|) ... sp
+    # TODO: st(u|)r(b|h|) ... sp
+    # TODO: st(l|)r(b|h|) ... sp
+    # TODO: st(l|)r(b|h|) ... sp
+    # TODO: st(l|)xp ... sp
+    # TODO: st(l|)xr(b|h) ... sp
+    # TODO: stnp ... sp
+    # TODO: sttr(b|h|) ... sp
+    UnknownStackOp = ()
+
     # Some operations are already covered by tracking the counter part like
     # * pop and push
     # * add and sub
