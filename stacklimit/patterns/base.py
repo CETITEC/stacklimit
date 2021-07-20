@@ -76,13 +76,13 @@ class Pattern(ABC):
         Returns:
             str: the operation
         """
-        op = ".*( |\t)+{}".format(args[0])
+        op = ".*\s+{}".format(args[0])
 
         if len(args) > 1:
-            op = "{}( |\t)+{}".format(op, args[1])
+            op = "{}\s+{}".format(op, args[1])
 
         for arg in args[2:]:
-            op = "{},( |\t|)+{}".format(op, arg)
+            op = "{},\s*{}".format(op, arg)
 
         # TODO: Make sure that instructions are unambiguous
         #
@@ -92,9 +92,9 @@ class Pattern(ABC):
         # or
         # > push %reg1
         #
-        # op = "{}(( |\t)+|$)".format(op)
+        # op = "{}(\s+|$)".format(op)
         #
-        # After that update all function calls using the suffix "( |\t)+"
+        # After that update all function calls using the suffix "\s+"
 
         return op
 

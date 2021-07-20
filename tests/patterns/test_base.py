@@ -84,10 +84,10 @@ def test_pattern_function_with_negative_line(line):
     "args, result",
     [
         # fmt: off
-        (["inst"],                         ".*( |\t)+inst"),
-        (["inst", "reg1"],                 ".*( |\t)+inst( |\t)+reg1"),
-        (["inst", "reg1", "reg2"],         ".*( |\t)+inst( |\t)+reg1,( |\t|)+reg2"),
-        (["inst", "reg1", "reg2", "reg3"], ".*( |\t)+inst( |\t)+reg1,( |\t|)+reg2,( |\t|)+reg3"),
+        (["inst"],                         ".*\s+inst"),
+        (["inst", "reg1"],                 ".*\s+inst\s+reg1"),
+        (["inst", "reg1", "reg2"],         ".*\s+inst\s+reg1,\s*reg2"),
+        (["inst", "reg1", "reg2", "reg3"], ".*\s+inst\s+reg1,\s*reg2,\s*reg3"),
         # fmt: on
     ],
 )
