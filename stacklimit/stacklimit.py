@@ -537,10 +537,10 @@ class Stacklimit:
 
         if stack_operation is StackManipulation.Clear:
             check_text = self._attribute_ok("clear")
-        elif stack_operation is StackManipulation.Weak:
-            check_text = self._attribute_warn("weak ")
         elif stack_operation is StackManipulation.Potential:
             check_text = self._attribute_note("pot. ")
+        elif stack_operation is StackManipulation.Weak:
+            check_text = self._attribute_warn("weak ")
         elif stack_operation is StackManipulation.No:
             check_text = "     "
         else:

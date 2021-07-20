@@ -9,14 +9,16 @@ class StackManipulation:
 
     No:         no stack operation recognized or considered
     Clear:      stack operation recognized and considered correctly
-    Weak:       stack operation recognized, but not considered correctly
     Potential:  potential stack operation recognized, but not considered
+    Weak:       stack operation recognized, but not considered correctly
+
+    The states are prioritizes to make them comparable.
     """
 
     No = 0
     Clear = 1
-    Weak = 2
-    Potential = 3
+    Potential = 2
+    Weak = 3
 
 
 class Visitor:
@@ -144,18 +146,18 @@ class Stack:
             statistic[StackManipulation.Clear] (int):
                 the number of instructions which increase the stack with the known
                 amount of bytes
+            statistic[StackManipulation.Potential] (int):
+                the number of skipped potential stack instructions
             statistic[StackManipulation.Weak] (int):
                 the number of instructions which increase the stack, but the stack
                 increase can't be calculated
-            statistic[StackManipulation.Potential] (int):
-                the number of skipped potential stack instructions
         """
 
         per_stack_manipulation = {
             StackManipulation.No: 0,
             StackManipulation.Clear: 0,
-            StackManipulation.Weak: 0,
             StackManipulation.Potential: 0,
+            StackManipulation.Weak: 0,
         }
 
     class Function:
