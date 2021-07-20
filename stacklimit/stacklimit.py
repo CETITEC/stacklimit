@@ -546,9 +546,12 @@ class Stacklimit:
     # * 4. column:  output of objdump
     #   * byte increase of the stack
     def _track_operation(self, pattern, line, stack_impact, size=None):
+        operation = Pattern.get_operation(line)
+
+        if operation is not None:
+            self.stacktable.statistic.add_operation(operation, stack_impact)
         check_text = self._stack_impact(stack_impact)
 
-        self.stacktable.statistic.per_stack_impact[stack_impact] += 1
         size_text = "     "
         if size:
             size_text = self._bold("+{:>{}}B".format(size, 3))

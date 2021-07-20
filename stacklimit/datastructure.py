@@ -21,6 +21,28 @@ class StackImpact:
     Weak = 3
 
 
+class OperationStatistic:
+    """Statistic of an operation.
+
+    Attributes:
+        executions (int):                    the number of occur
+        stack_operation (StackImpact): the status of the stack operation
+    """
+
+    executions = 0
+    stack_impact = None
+
+    def __init__(self, executions, stack_impact):
+        """Create the object.
+
+        Args:
+            executions (int):                       the number of occur
+            stack_impact (StackImpact): the status of the stack operation
+        """
+        self.executions = executions
+        self.stack_impact = stack_impact
+
+
 class Visitor:
     """Visit each node of the tree, which represents all recursive function calls.
 
@@ -141,6 +163,8 @@ class Stack:
         """Statistic about operation codes of a binary.
 
         Attributes:
+            operations (dict[StackImpact]):
+                list of all executed instructions with the number of occur
             statistic[StackImpact.No] (int):
                 the number of skipped instructions, which don't manipulate the stack
             statistic[StackImpact.Clear] (int):
@@ -153,12 +177,30 @@ class Stack:
                 increase can't be calculated
         """
 
+        per_operations = {}
         per_stack_impact = {
             StackImpact.No: 0,
             StackImpact.Clear: 0,
             StackImpact.Potential: 0,
             StackImpact.Weak: 0,
         }
+
+        def add_operation(self, operation, stack_impact):
+            """Add an operation to the statistics.
+
+            Args:
+                operation (str):                        the instruction
+                stack_impact (StackImpact): the status of the stack
+                                                        operation
+            """
+            if operation in self.per_operations:
+                self.per_operations[operation].executions += 1
+                if stack_impact > self.per_operations[operation].stack_impact:
+                    self.per_operations[operation].stack_impact = stack_impact
+            else:
+                self.per_operations[operation] = OperationStatistic(1, stack_impact)
+
+            self.per_stack_impact[stack_impact] += 1
 
     class Function:
         """A function of a binary.
