@@ -39,6 +39,11 @@ def main():
         "--show-section", action="store_true", help="show section column"
     )
     parser.add_argument(
+        "--show-operation-statistic",
+        action="store_true",
+        help="show operation statistic",
+    )
+    parser.add_argument(
         "-t", "--tree", action="store_true", help="show function call tree"
     )
     parser.add_argument(
@@ -92,7 +97,7 @@ def main():
         else:
             sl.print_stack_table(args.show_header, args.show_section)
         print()
-        sl.print_statistic(args.show_header)
+        sl.print_statistic(args.show_header, args.show_operation_statistic)
     except KeyboardInterrupt:
         exit(130)
 

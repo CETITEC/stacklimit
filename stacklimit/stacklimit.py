@@ -48,26 +48,30 @@ class Statistic:
     """Helper class to iterate easily through.
 
     Attributes:
-        title (str):   the description of the count
-        count (int):   the number of occurrences
-        percent (int): the percentage of count related to number of instructions
+        title (str):           the description of the count
+        count (int):           the number of occurrences
+        percent (int):         the percentage of count related to number of instructions
+        data (data, optional): the additional data
     """
 
     title = None
     count = 0
     percent = 0
+    data = None
 
-    def __init__(self, title, count, percent):
+    def __init__(self, title, count, percent, data=None):
         """Create the object.
 
         Args:
             title (str):   the description of the count
             count (int):   the number of occurrences
             percent (int): the percentage of count related to number of instructions
+            data (data):   the additional data
         """
         self.title = title
         self.count = count
         self.percent = percent
+        self.data = data
 
 
 class Stacklimit:
@@ -931,8 +935,66 @@ class Stacklimit:
                     ),
                 )
 
-    def print_statistic(self, show_header=False):
+    def print_statistic_of_operations(self, show_header=False):
         """Print statistic of the parsed instructions.
+
+        Args:
+            show_header (bool, optional):
+                Show the column headers of the table. Defaults to False.
+        """
+        operations = self.stacktable.statistic.per_operations
+
+        total = 0
+        title_len = 9 if show_header else 1
+        count_len = 99999 if show_header else 1
+
+        for operation in operations:
+            total += operations[operation].executions
+            title_len = max(len(operation), title_len)
+            count_len = max(operations[operation].executions, count_len)
+
+        count_len = int(log(count_len, 10).real + 1) + 1
+        percent_len = 4
+
+        statistics = [Statistic("total", total, 100, StackImpact.No)]
+        for operation in operations:
+            executions = operations[operation].executions
+            executions_percent = round(100 * float(executions / total))
+            stack_impact = operations[operation].stack_impact
+            statistics.append(
+                Statistic(operation, executions, executions_percent, stack_impact)
+            )
+
+        statistics.sort(key=lambda statistic: statistic.count, reverse=True)
+
+        if show_header:
+            self._print(
+                Message.INFO,
+                "{:<{}} {:>{}}  {:>{}}  stack impact".format(
+                    "operation",
+                    title_len,
+                    "count",
+                    count_len,
+                    "%",
+                    percent_len,
+                ),
+            )
+
+        for statistic in statistics:
+            operation = "{:{width}}".format(statistic.title, width=title_len)
+            count = "{:{width}}".format(statistic.count, width=count_len)
+            percent = self._bold(
+                "{:{width}}".format(statistic.percent, width=percent_len)
+            )
+            stack_impact = self._stack_impact(statistic.data)
+
+            self._print(
+                Message.INFO,
+                "{} {} {}%  {}".format(operation, count, percent, stack_impact),
+            )
+
+    def print_statistic_of_stack_impacts(self, show_header=False):
+        """Print stack impact statistic of the parsed instructions.
 
         Args:
             show_header (bool, optional):
@@ -1040,6 +1102,20 @@ class Stacklimit:
                 Message.INFO,
                 "{} {} {}%".format(title, count, percent),
             )
+
+    def print_statistic(self, show_header=False, show_operation_statistic=False):
+        """Print statistic of the parsed instructions.
+
+        Args:
+            show_header (bool, optional):
+                Show the column headers of the table. Defaults to False.
+            show_operation_statistic (bool, optional):
+                show operation statistic
+        """
+        if show_operation_statistic:
+            self.print_statistic_of_operations(show_header)
+            print()
+        self.print_statistic_of_stack_impacts(show_header)
 
     def print_call_tree(self):
         """Print the function call tree."""
