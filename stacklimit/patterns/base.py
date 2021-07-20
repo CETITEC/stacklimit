@@ -1,6 +1,7 @@
 #!/bin/python3
 """The base class to implement patterns for a specific architecture."""
 
+import re
 from abc import ABC, abstractmethod
 
 
@@ -112,6 +113,26 @@ class Pattern(ABC):
         name = " ".join(line_array[1:])[1:-2]
 
         return address, name
+
+    @staticmethod
+    def get_operation(line):
+        """Filter the instruction name.
+
+        Args:
+            line (str): the text line of the instruction
+
+        Returns:
+            str: the instruction name
+        """
+        prefix = re.match("^\s+[0-9a-f]+:\s+([0-9a-f]+ )+\s+", line)
+
+        if prefix:
+            start = prefix.span()[1]
+            # print(line[start:])
+            # print(re.split("\s", line[start:])[0])
+            return re.split("\s", line[start:])[0]
+
+        return None
 
     @staticmethod
     def get_section(line):
