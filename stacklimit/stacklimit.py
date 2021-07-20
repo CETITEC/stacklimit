@@ -521,6 +521,18 @@ class Stacklimit:
 
         return function.section == ".text" and function.name not in Pattern.os_functions
 
+    def _stack_impact(self, stack_impact):
+        if stack_impact is StackImpact.Clear:
+            return self._attribute_ok("clear")
+        elif stack_impact is StackImpact.Potential:
+            return self._attribute_note("pot. ")
+        elif stack_impact is StackImpact.Weak:
+            return self._attribute_warn("weak ")
+        elif stack_impact is StackImpact.No:
+            return "     "
+        else:
+            raise ValueError("Unknown StackImpact state {}.".format(stack_impact))
+
     # TODO: Print an explanation of the debug values
     # * 1. column:  Result if the instruction was detected as a stack instruction.
     #   * clear:    The instruction was detected as a stack instruction and the stack
@@ -534,17 +546,7 @@ class Stacklimit:
     # * 4. column:  output of objdump
     #   * byte increase of the stack
     def _track_operation(self, pattern, line, stack_impact, size=None):
-
-        if stack_impact is StackImpact.Clear:
-            check_text = self._attribute_ok("clear")
-        elif stack_impact is StackImpact.Potential:
-            check_text = self._attribute_note("pot. ")
-        elif stack_impact is StackImpact.Weak:
-            check_text = self._attribute_warn("weak ")
-        elif stack_impact is StackImpact.No:
-            check_text = "     "
-        else:
-            raise ValueError("Unknown StackImpact state {}.".format(stack_impact))
+        check_text = self._stack_impact(stack_impact)
 
         self.stacktable.statistic.per_stack_impact[stack_impact] += 1
         size_text = "     "
