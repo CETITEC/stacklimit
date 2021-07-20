@@ -1024,7 +1024,7 @@ class Stacklimit:
         if show_header:
             self._print(
                 Message.INFO,
-                "{:<{}} {:>{}} {:>{}}".format(
+                "{:<{}} {:>{}}  {:>{}}".format(
                     "",
                     title_len,
                     "count",
