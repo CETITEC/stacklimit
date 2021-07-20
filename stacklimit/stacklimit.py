@@ -1098,10 +1098,7 @@ class Stacklimit:
                 "{:{width}}".format(statistic.percent, width=percent_len)
             )
 
-            self._print(
-                Message.INFO,
-                "{} {} {}%".format(title, count, percent),
-            )
+            self._print(Message.INFO, "{} {} {}%".format(title, count, percent))
 
     def print_statistic(self, show_header=False, show_operation_statistic=False):
         """Print statistic of the parsed instructions.
