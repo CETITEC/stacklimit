@@ -8,7 +8,7 @@ from cmath import log
 from os import environ, listdir
 from os.path import isfile
 
-from datastructure import Stack, StackManipulation, Visitor
+from datastructure import Stack, StackImpact, Visitor
 from output import Color, Message
 from patterns import Pattern, aarch64, arm, x86, x86_64
 
@@ -533,22 +533,20 @@ class Stacklimit:
     # * 3. column:  how much the stack will grow
     # * 4. column:  output of objdump
     #   * byte increase of the stack
-    def _track_operation(self, pattern, line, stack_operation, size=None):
+    def _track_operation(self, pattern, line, stack_impact, size=None):
 
-        if stack_operation is StackManipulation.Clear:
+        if stack_impact is StackImpact.Clear:
             check_text = self._attribute_ok("clear")
-        elif stack_operation is StackManipulation.Potential:
+        elif stack_impact is StackImpact.Potential:
             check_text = self._attribute_note("pot. ")
-        elif stack_operation is StackManipulation.Weak:
+        elif stack_impact is StackImpact.Weak:
             check_text = self._attribute_warn("weak ")
-        elif stack_operation is StackManipulation.No:
+        elif stack_impact is StackImpact.No:
             check_text = "     "
         else:
-            raise ValueError(
-                "Unknown StackManipulation state {}.".format(stack_operation)
-            )
+            raise ValueError("Unknown StackImpact state {}.".format(stack_impact))
 
-        self.stacktable.statistic.per_stack_manipulation[stack_operation] += 1
+        self.stacktable.statistic.per_stack_impact[stack_impact] += 1
         size_text = "     "
         if size:
             size_text = self._bold("+{:>{}}B".format(size, 3))
@@ -740,9 +738,7 @@ class Stacklimit:
             if pattern.StackPushOp and re.match(pattern.StackPushOp, line):
                 size = pattern.get_stack_push_size(line)
                 current.size += size
-                self._track_operation(
-                    "StackPushOp", line, StackManipulation.Clear, size
-                )
+                self._track_operation("StackPushOp", line, StackImpact.Clear, size)
 
             # TODO: Only track sub with positive numbers and add with negative numbers
             # Note: We ignore all 'add' operations. We're only interested in 'sub'.
@@ -766,11 +762,11 @@ class Stacklimit:
                     continue
 
                 current.size += size
-                self._track_operation("StackSubOp", line, StackManipulation.Clear, size)
+                self._track_operation("StackSubOp", line, StackImpact.Clear, size)
 
             elif pattern.StackDynamicOp and re.match(pattern.StackDynamicOp, line):
                 current.dynamic = True
-                self._track_operation("StackDynamicOp", line, StackManipulation.Weak)
+                self._track_operation("StackDynamicOp", line, StackImpact.Weak)
 
             elif pattern.FunctionCall and re.match(pattern.FunctionCall, line):
                 (address, name) = pattern.get_function_call(line)
@@ -785,21 +781,19 @@ class Stacklimit:
                     current.calls.append(function)
                     function.returns.append(current)
 
-                self._track_operation("FunctionCall", line, StackManipulation.Weak)
+                self._track_operation("FunctionCall", line, StackImpact.Weak)
 
             elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
                 function_pointer = self.stacktable.find(0)
                 current.calls.append(function_pointer)
                 function_pointer.returns.append(current)
 
-                self._track_operation("FunctionPointer", line, StackManipulation.Weak)
+                self._track_operation("FunctionPointer", line, StackImpact.Weak)
 
             elif pattern.PotentialStackOp and re.match(pattern.PotentialStackOp, line):
-                self._track_operation(
-                    "PotentialStackOp", line, StackManipulation.Potential
-                )
+                self._track_operation("PotentialStackOp", line, StackImpact.Potential)
             else:
-                self._track_operation("", line, StackManipulation.No)
+                self._track_operation("", line, StackImpact.No)
 
         for function in [
             function
@@ -939,23 +933,19 @@ class Stacklimit:
             show_header (bool, optional):
                 Show the column headers of the table. Defaults to False.
         """
-        total = sum(self.stacktable.statistic.per_stack_manipulation.values())
+        total = sum(self.stacktable.statistic.per_stack_impact.values())
 
-        clear = self.stacktable.statistic.per_stack_manipulation[
-            StackManipulation.Clear
-        ]
+        clear = self.stacktable.statistic.per_stack_impact[StackImpact.Clear]
         clear_percent = round(100 * float(clear / total))
 
-        weak = self.stacktable.statistic.per_stack_manipulation[StackManipulation.Weak]
+        weak = self.stacktable.statistic.per_stack_impact[StackImpact.Weak]
         weak_percent = round(100 * float(weak / total))
 
-        skipped_clear = self.stacktable.statistic.per_stack_manipulation[
-            StackManipulation.No
-        ]
+        skipped_clear = self.stacktable.statistic.per_stack_impact[StackImpact.No]
         skipped_clear_percent = round(100 * float(skipped_clear / total))
 
-        skipped_potential = self.stacktable.statistic.per_stack_manipulation[
-            StackManipulation.Potential
+        skipped_potential = self.stacktable.statistic.per_stack_impact[
+            StackImpact.Potential
         ]
         skipped_potential_percent = round(100 * float(skipped_potential / total))
 
@@ -968,7 +958,7 @@ class Stacklimit:
         statistics = [
             Statistic("total", total, 100),
             Statistic("clear", clear, clear_percent),
-            Statistic("weak (unknown stack manipulation)", weak, weak_percent),
+            Statistic("weak (unknown stack impact)", weak, weak_percent),
             Statistic("skipped", skipped, skipped_percent),
             Statistic(
                 "  potential stack operations",
@@ -976,7 +966,7 @@ class Stacklimit:
                 skipped_potential_percent,
             ),
             Statistic(
-                "  unexpected stack manipulation",
+                "  unexpected stack impact",
                 skipped_clear,
                 skipped_clear_percent,
             ),
@@ -1019,7 +1009,7 @@ class Stacklimit:
         #                                     * add x... and add -x...
         #                                     or are recovered by using another
         #                                     opeartion like mov
-        #   * unexpected stack manipulation
+        #   * unexpected stack impact
 
         if show_header:
             self._print(

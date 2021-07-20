@@ -4,7 +4,7 @@
 MAX_NAME_LEN = 64
 
 
-class StackManipulation:
+class StackImpact:
     """Status of the stack operation.
 
     No:         no stack operation recognized or considered
@@ -141,23 +141,23 @@ class Stack:
         """Statistic about operation codes of a binary.
 
         Attributes:
-            statistic[StackManipulation.No] (int):
+            statistic[StackImpact.No] (int):
                 the number of skipped instructions, which don't manipulate the stack
-            statistic[StackManipulation.Clear] (int):
+            statistic[StackImpact.Clear] (int):
                 the number of instructions which increase the stack with the known
                 amount of bytes
-            statistic[StackManipulation.Potential] (int):
+            statistic[StackImpact.Potential] (int):
                 the number of skipped potential stack instructions
-            statistic[StackManipulation.Weak] (int):
+            statistic[StackImpact.Weak] (int):
                 the number of instructions which increase the stack, but the stack
                 increase can't be calculated
         """
 
-        per_stack_manipulation = {
-            StackManipulation.No: 0,
-            StackManipulation.Clear: 0,
-            StackManipulation.Potential: 0,
-            StackManipulation.Weak: 0,
+        per_stack_impact = {
+            StackImpact.No: 0,
+            StackImpact.Clear: 0,
+            StackImpact.Potential: 0,
+            StackImpact.Weak: 0,
         }
 
     class Function:
