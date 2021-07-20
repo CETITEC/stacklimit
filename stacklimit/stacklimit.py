@@ -554,17 +554,15 @@ class Stacklimit:
 
         if operation is not None:
             self.stacktable.statistic.add_operation(operation, stack_impact)
-        check_text = self._stack_impact(stack_impact)
+
+        stack_impact_text = self._stack_impact(stack_impact)
 
         size_text = "     "
         if size:
             size_text = self._bold("+{:>{}}B".format(size, 3))
 
-        self._print(
-            Message.DEBUG,
-            "  {} {:<{}} {}".format(check_text, pattern, 16, size_text),
-            line,
-        )
+        prefix = "  {} {:<16} {}".format(stack_impact_text, pattern, size_text)
+        self._print(Message.DEBUG, prefix, line)
 
     def _handle_dynamic(self, callstack):
         current = callstack[-1]
