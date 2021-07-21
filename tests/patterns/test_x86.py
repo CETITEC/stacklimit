@@ -68,6 +68,11 @@ register_sizes = [
 
 function_calls = [
     (
+        "400734:       e8 b0 fe ff ff          call   4005e9 <function_e>",
+        0x4005E9,
+        "function_e",
+    ),
+    (
         "400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>",
         0x4005E9,
         "function_e",
@@ -75,6 +80,7 @@ function_calls = [
 ]
 
 function_calls_negative = [
+    "400804:   ff d0                   call   *%rax",
     "400804:   ff d0                   callq  *%rax",
 ]
 
@@ -88,10 +94,12 @@ stack_dynamic_op_negative = [
 ]
 
 function_pointer = [
+    "400804:   ff d0                   call   *%rax",
     "400804:   ff d0                   callq  *%rax",
 ]
 
 function_pointer_negative = [
+    "400734:       e8 b0 fe ff ff          call   4005e9 <function_e>",
     "400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>",
 ]
 

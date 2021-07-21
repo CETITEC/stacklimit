@@ -60,11 +60,13 @@ class x86(Pattern):
         # fmt: on
     )
 
+    #   400734:       e8 b0 fe ff ff          call   4005e9 <function_e>
     #   400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>
-    FunctionCall = Pattern._operation("callq", "[0-9a-f]+ \<.*\>$")
+    FunctionCall = Pattern._operation("call(q|)", "[0-9a-f]+ \<.*\>$")
 
+    #   400804:   ff d0                   call   *%rax
     #   400804:   ff d0                   callq  *%rax
-    FunctionPointer = Pattern._operation("callq", ".*%.*$")
+    FunctionPointer = Pattern._operation("call(q|)", ".*%.*$")
 
     #   XXXXXX:   YY YY YY YY             add     0xff,%rsp
     #   XXXXXX:   YY YY YY YY             sub     0xef,%rsp
