@@ -788,7 +788,7 @@ class Stacklimit:
                     current.calls.append(function)
                     function.returns.append(current)
 
-                self._track_operation("FunctionCall", line, StackImpact.Weak)
+                self._track_operation("FunctionCall", line, StackImpact.Clear)
 
             elif pattern.FunctionPointer and re.match(pattern.FunctionPointer, line):
                 function_pointer = self.stacktable.find(0)
