@@ -208,6 +208,12 @@ def test_x86_get_function_call(line, address, name):
     assert x86.get_function_call(line) == (address, name)
 
 
+@pytest.mark.parametrize("line", function_calls)
+def test_x86_get_stack_call_size(line):
+    """Test x86.get_stack_call_size()."""
+    assert x86.get_stack_call_size(line) == 4
+
+
 @pytest.mark.parametrize("line, size", stack_push_op)
 def test_x86_get_stack_push_size(line, size):
     """Test x86.get_stack_push_size()."""

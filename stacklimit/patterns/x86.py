@@ -126,6 +126,14 @@ class x86(Pattern):
         return address, name
 
     @staticmethod
+    def get_stack_call_size(line):
+        """Implement Pattern.get_stack_call_size.
+
+        call will execute PUSH and JMP.
+        """
+        return 4
+
+    @staticmethod
     def _get_stack_push_size(line):
         """Calculate how many bytes the stack will grow depending on the register."""
         if re.match(".*( |\t)+%{}$".format(x86.reg8bytes), line):

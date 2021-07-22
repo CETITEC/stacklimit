@@ -20,6 +20,14 @@ class x86_64(x86):
     StackPushOp = Pattern._operation("push(q|)( |\t)+")
 
     @staticmethod
+    def get_stack_call_size(line):
+        """Implement Pattern.get_stack_call_size.
+
+        call will execute PUSH and JMP.
+        """
+        return 8
+
+    @staticmethod
     def get_stack_push_size(line):
         """Implement Pattern.get_stack_push_size."""
         size = x86._get_stack_push_size(line)

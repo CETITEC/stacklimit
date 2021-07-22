@@ -164,6 +164,21 @@ class Pattern(ABC):
 
     @staticmethod
     @abstractmethod
+    def get_stack_call_size(line):
+        """Calculate the size difference of the stack after the call operation.
+
+        This function will return how much the stack will grow after the call operation.
+
+        Args:
+            line (str): the text line of the stack push operation
+
+        Returns:
+            int: the size the stack will grow
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
     def get_stack_push_size(line):
         """Calculate the size difference of the stack after the stack push operation.
 

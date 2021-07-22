@@ -14,6 +14,11 @@ constants = [
     "$0xffffffffffffffbf",
 ]
 
+function_calls = [
+    ("400734:       e8 b0 fe ff ff          call   4005e9 <function_e>",),
+    ("400734:       e8 b0 fe ff ff          callq  4005e9 <function_e>",),
+]
+
 
 # Return a list of the tuples (line, size) with line:
 # > 4004c3:   55                      push(|l)  $const
@@ -42,6 +47,12 @@ def test_x86_64_stack_push_op(line):
 def test_x86_64_stack_push_op_with_negative_line(line):
     """Test x86_64.StackPushOp with lines without matches."""
     assert re.match(x86_64.StackPushOp, line) == None
+
+
+@pytest.mark.parametrize("line", function_calls)
+def test_x86_get_stack_call_size(line):
+    """Test x86.get_stack_call_size()."""
+    assert x86_64.get_stack_call_size(line) == 8
 
 
 # Skipped: got empty parameter set ['line', 'size'], function test_x86_64_get_stack_push_size at /home/mlu/dev/stacklimit/tests/patterns/test_x86_64.py:49pytest(./tests/patterns/test_x86_64.py::test_x86_64_get_stack_push_size[line0-size0])

@@ -151,6 +151,11 @@ class arm(Pattern):
         return address, name
 
     @staticmethod
+    def get_stack_call_size(line):
+        """Implement Pattern.get_stack_call_size."""
+        return 0
+
+    @staticmethod
     def get_stack_push_count(line):
         """Count the registers pushed onto the stack.
 

@@ -114,6 +114,12 @@ def test_pattern_get_function_call():
         Pattern.get_function_call(None)
 
 
+def test_pattern_get_stack_call_size():
+    """Test Pattern.get_stack_call_size()."""
+    with pytest.raises(NotImplementedError):
+        Pattern.get_stack_call_size(None)
+
+
 def test_pattern_get_stack_push_size():
     """Test Pattern.get_stack_push_size()."""
     with pytest.raises(NotImplementedError):
