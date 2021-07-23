@@ -97,3 +97,12 @@ And to generate a coverage report in XML, which can be used further, run
 ```
 poetry run pytest --cov=stacklimit --cov-report=xml tests
 ```
+
+
+Component tests
+---------------
+
+To run component tests execute
+```
+poetry run tests/component/recursion.sh
+```
