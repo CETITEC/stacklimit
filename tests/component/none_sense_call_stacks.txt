@@ -1,0 +1,66 @@
+# Call tree of none_sense.c
+# * rec_phi
+#   * rec_psi
+#     * rec_chi
+#
+# * main
+#   * func_omega
+#     * func_omega2
+#   * func_epsilon
+#     * func_alpha
+#       * func_alpha2
+#         * func_alpha3
+#           * func_alpha4
+#     * func_beta
+#       * func_alpha
+#         * func_alpha2
+#           * func_alpha3
+#             * func_alpha4
+#     * func_gamma
+#       * func_alpha
+#         * func_alpha2
+#           * func_alpha3
+#             * func_alpha4
+#       * func_beta
+#         * func_alpha
+#           * func_alpha2
+#             * func_alpha3
+#               * func_alpha4
+#     * func_delta
+#       * func_alpha
+#         * func_alpha2
+#           * func_alpha3
+#             * func_alpha4
+#       * func_beta
+#         * func_alpha
+#           * func_alpha2
+#             * func_alpha3
+#               * func_alpha4
+#       * func_gamma
+#         * func_alpha
+#           * func_alpha2
+#             * func_alpha3
+#               * func_alpha4
+#         * func_beta
+#           * func_alpha
+#             * func_alpha2
+#               * func_alpha3
+#                 * func_alpha4
+#   * rec_psi
+#     * rec_chi
+#   * rec_xi
+#   * rec_xi
+
+# All call stacks to the deepest function call
+rec_phi + rec_psi + rec_chi
+main + func_omega + func_omega2
+main + func_epsilon + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + func_epsilon + func_beta + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + func_epsilon + func_gamma + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + func_epsilon + func_gamma + func_beta + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + func_epsilon + func_delta + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + func_epsilon + func_delta + func_beta + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + func_epsilon + func_delta + func_gamma + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + func_epsilon + func_delta + func_beta + func_alpha + func_alpha2 + func_alpha3 + func_alpha4
+main + rec_psi + rec_chi
+main + rec_xi

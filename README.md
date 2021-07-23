@@ -105,5 +105,6 @@ Component tests
 To run component tests execute
 ```
 poetry run tests/component/misc.sh
+poetry run tests/component/none_sense.sh
 poetry run tests/component/recursion.sh
 ```
