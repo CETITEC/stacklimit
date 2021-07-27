@@ -66,7 +66,7 @@ def main():
     args = parser.parse_args()
 
     warn = not args.no_warnings
-    mult_warn = not args.no_duplicated_warnings
+    multiple_warn = not args.no_duplicated_warnings
     color = not args.no_color
 
     try:
@@ -75,7 +75,7 @@ def main():
             warn,
             args.quiet,
             color,
-            mult_warn,
+            multiple_warn,
             args.regard_all,
             args.arch,
             args.objdump,
