@@ -6,6 +6,46 @@ import argparse
 from stacklimit import Stacklimit
 
 
+def print_documentation():
+    """Print the tool documentation."""
+    print(
+        "Debug message formatting of the objdump parser:\n"
+        "          +- state if the instruction was detected as a stack operation:\n"
+        "          |   - clear:    stack instruction recognized and considered correctly\n"
+        "          |   - pot.:     potential stack instruction recognized, but not considered\n"
+        "          |   - weak:     stack instructions recognized, but cannot be considered\n"
+        "          |               correctly\n"
+        "          |   - (empty):  no stack instruction detected\n"
+        "          |\n"
+        "          |     +- the sort of the detected stack operation\n"
+        "          |     |\n"
+        "          |     |                  +- how much the stack will grow\n"
+        "          |     |                  |\n"
+        "          |     |                  |    +- output of objdump\n"
+        "          |     |                  |    |\n"
+        "Debug:   clear StackSubOp       +  8B  4d0:	48 83 ec 08          	sub    $0x8,%rsp\n"
+    )
+
+
+class DocumentationAction(argparse.Action):
+    """The action class for printing the documentation."""
+
+    def __init__(self, option_strings, dest=None, default=None, help=None):
+        """Create the object."""
+        super().__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help,
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Execute the action."""
+        print_documentation()
+        parser.exit()
+
+
 def main():
     """Entry point for the command prompt."""
     parser = argparse.ArgumentParser(
@@ -14,11 +54,18 @@ def main():
         description="Determine the maximum stack size of C.",
         epilog="Note: This script cannot handle recursive functions and function"
         " pointers!\n"
+        "\n"
         "Exit status:    0  OK\n"
         "                1  input error\n"
         "                2  program error\n"
         "               10  see warnings\n"
         "              130  user abort the program",
+    )
+    parser.add_argument(
+        "-D",
+        "--documentation",
+        action=DocumentationAction,
+        help="print the tool documentation",
     )
     # TODO: Handle multiple binaries: nargs='+'
     parser.add_argument("binary", type=argparse.FileType("r"), help="the binary")

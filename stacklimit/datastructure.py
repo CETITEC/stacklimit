@@ -10,7 +10,7 @@ class StackImpact:
     No:         no stack operation recognized or considered
     Clear:      stack operation recognized and considered correctly
     Potential:  potential stack operation recognized, but not considered
-    Weak:       stack operation recognized, but not considered correctly
+    Weak:       stack operation recognized, but cannot be considered correctly
 
     The states are prioritizes to make them comparable.
     """

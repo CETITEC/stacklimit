@@ -537,18 +537,6 @@ class Stacklimit:
         else:
             raise ValueError("Unknown StackImpact state {}.".format(stack_impact))
 
-    # TODO: Print an explanation of the debug values
-    # * 1. column:  Result if the instruction was detected as a stack instruction.
-    #   * clear:    The instruction was detected as a stack instruction and the stack
-    #               increase could be calculated successfully. No mistakes expected.
-    #   * weak:     The instruction was detected as a stack instruction, but the stack
-    #               increase couldn't be calculated.
-    #   * pot.:     The instruction might be a stack operation, but was ignored.
-    #   * (empty):  The instruction wasn't detected as a stack instruction.
-    # * 2. column:  the sort of the detected stack operation
-    # * 3. column:  how much the stack will grow
-    # * 4. column:  output of objdump
-    #   * byte increase of the stack
     def _track_operation(self, pattern, line, stack_impact, size=None):
         operation = Pattern.get_operation(line)
 
