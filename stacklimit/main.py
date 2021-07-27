@@ -70,7 +70,7 @@ def main():
     color = not args.no_color
 
     try:
-        sl = Stacklimit(
+        stacklimit = Stacklimit(
             args.debug,
             warn,
             args.quiet,
@@ -86,18 +86,18 @@ def main():
 
     try:
         # TODO: Handle multiple binaries
-        sl.parse(args.binary.name)
-        precise = sl.calculate_stack()
-        limit = sl.get_stack_limit()
+        stacklimit.parse(args.binary.name)
+        precise = stacklimit.calculate_stack()
+        limit = stacklimit.get_stack_limit()
 
         if args.summary:
             print(limit)
         elif args.tree:
-            sl.print_call_tree()
+            stacklimit.print_call_tree()
         else:
-            sl.print_stack_table(args.show_header, args.show_section)
+            stacklimit.print_stack_table(args.show_header, args.show_section)
         print()
-        sl.print_statistic(args.show_header, args.show_operation_statistic)
+        stacklimit.print_statistic(args.show_header, args.show_operation_statistic)
     except KeyboardInterrupt:
         exit(130)
 
