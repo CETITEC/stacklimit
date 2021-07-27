@@ -6,8 +6,8 @@ Determines the maximum stack size of a binary program using the ELF format.
 The logic is very simple. This tool just parse the assembler code and notes all
 subtraction operations on the stack. Additionally it builds an function call
 graph based on the knowledge of the assembler code which function is calling the
-respective subfunction. After that the tool calculates the stack size for each
-function including the stack size of the subfunction with the biggest stack
+respective sub-function. After that the tool calculates the stack size for each
+function including the stack size of the sub-function with the biggest stack
 size.
 
 

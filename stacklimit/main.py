@@ -13,7 +13,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Determine the maximum stack size of C.",
         epilog="Note: This script cannot handle recursive functions and function"
-        "pointers!\n"
+        " pointers!\n"
         "Exit status:    0  OK\n"
         "                1  input error\n"
         "                2  program error\n"
