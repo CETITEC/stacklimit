@@ -7,8 +7,8 @@ from .base import Pattern
 class arm(Pattern):
     """Contain the A32, T32 and A64 instruction set of the ARM architecture.
 
-    Both 32 bit and 64 registers are covered. Further the following instruction sets are
-    considered:
+    Both 32 bit and 64 bit registers are covered. Further the following instruction sets
+    are considered:
     * AArch32
       * A32 (previously known as ARM)
       * T32 (previously known as Thumb2)
