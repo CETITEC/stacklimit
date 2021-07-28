@@ -8,6 +8,7 @@ from stacklimit import Stacklimit
 
 def print_documentation():
     """Print the tool documentation."""
+    # All printed lines are < 83 characters long.
     print(
         "Debug message formatting of the objdump parser:\n"
         "          +- state if the instruction was detected as a stack operation:\n"
@@ -24,6 +25,28 @@ def print_documentation():
         "          |     |                  |    +- output of objdump\n"
         "          |     |                  |    |\n"
         "Debug:   clear StackSubOp       +  8B  4d0:	48 83 ec 08          	sub    $0x8,%rsp\n"
+        "\n"
+        "\n"
+        "Stack table:\n"
+        "\n"
+        '">" indicates that the stack size can be bigger than calculated.\n'
+        "E.g. through dynamic stack operations or calling a function though a function\n"
+        "pointer which couldn't be resolved.\n"
+        "\n"
+        " +- the start address of the function\n"
+        " |\n"
+        " |       +- the function name\n"
+        " |       |\n"
+        " |       |         +- the file the function is defined\n"
+        " |       |         |\n"
+        " |       |         |              +- bytes the function itself manipulates the\n"
+        " |       |         |              |  stack size\n"
+        " |       |         |              |\n"
+        " |       |         |              |     +- bytes the function with all sub-functions\n"
+        " |       |         |              |     |  manipulates the stack size\n"
+        " |       |         |              |     |\n"
+        "address function  file           fsize tsize\n"
+        "0x008f9 main      dep-x86_64_O0     80  >480\n"
     )
 
 

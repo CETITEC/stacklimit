@@ -861,14 +861,6 @@ class Stacklimit:
         # Increment the length for the imprecise symbol
         total_len = int(log(total_len, 10).real + 1) + 1
 
-        # TODO: Print an explanation of the values
-        # * address   the start address of the function
-        # * function  the function name
-        # * file      file the function is defined
-        # * fsize     bytes the function itself manipulates the stack size
-        # * tsize     bytes the function with all sub-function manipulates the stack
-        #             size
-
         if show_header:
             section = "section "
             if not show_section:
