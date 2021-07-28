@@ -47,6 +47,20 @@ def print_documentation():
         " |       |         |              |     |\n"
         "address function  file           fsize tsize\n"
         "0x008f9 main      dep-x86_64_O0     80  >480\n"
+        "\n"
+        "\n"
+        "Operation statistic:\n"
+        "\n"
+        " +- the instruction\n"
+        " |\n"
+        " |      +- number of calls\n"
+        " |      |\n"
+        " |      |    +- percentage of calls in relation to all function calls\n"
+        " |      |    |\n"
+        " |      |    |     +- state if the instruction was detected as a stack operation\n"
+        " |      |    |     |\n"
+        "total  390  100%   |\n"
+        "call    30    8%  weak\n"
     )
 
 
