@@ -1095,7 +1095,7 @@ class Stacklimit:
         """
         if show_operation_statistic:
             self.print_statistic_of_operations(show_header)
-            print()
+            self._print(Message.INFO)
         self.print_statistic_of_stack_impacts(show_header)
 
     def print_call_tree(self):
