@@ -97,6 +97,13 @@ def print_documentation():
         "        skipped                        318   82%\n"
         "          potential stack instructions   0    0%\n"
         "          unexpected stack impact      318   82%\n"
+        "\n"
+        "EXIT STATUS\n"
+        "        •   0 OK\n"
+        "        •   1 input error\n"
+        "        •   2 program error\n"
+        "        •  10 see warnings\n"
+        "        • 130 user abort the program",
     )
 
 
@@ -125,14 +132,7 @@ def main():
         prog="stacklimit",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Determine the maximum stack size of C.",
-        epilog="Note: This script cannot handle recursive functions and function"
-        " pointers!\n"
-        "\n"
-        "Exit status:    0  OK\n"
-        "                1  input error\n"
-        "                2  program error\n"
-        "               10  see warnings\n"
-        "              130  user abort the program",
+        epilog="Note: This script cannot handle recursive functions and function pointers!\n",
     )
     parser.add_argument(
         "-D",
