@@ -162,12 +162,13 @@ def main():
 
         if args.summary:
             print(limit)
-        elif args.tree:
-            stacklimit.print_call_tree()
         else:
-            stacklimit.print_stack_table(args.show_header, args.show_section)
-        print()
-        stacklimit.print_statistic(args.show_header, args.show_operation_statistic)
+            if args.tree:
+                stacklimit.print_call_tree()
+            else:
+                stacklimit.print_stack_table(args.show_header, args.show_section)
+            print()
+            stacklimit.print_statistic(args.show_header, args.show_operation_statistic)
     except KeyboardInterrupt:
         exit(130)
 
