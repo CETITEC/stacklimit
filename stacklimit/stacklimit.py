@@ -861,6 +861,8 @@ class Stacklimit:
         # Increment the length for the imprecise symbol
         total_len = int(log(total_len, 10).real + 1) + 1
 
+        self._print(Message.INFO)
+
         if show_header:
             section = "section "
             if not show_section:
