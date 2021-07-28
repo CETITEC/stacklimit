@@ -61,6 +61,23 @@ def print_documentation():
         " |      |    |     |\n"
         "total  390  100%   |\n"
         "call    30    8%  weak\n"
+        "\n"
+        "\n"
+        "Stack impacts statistic:\n"
+        "\n"
+        " +- state how the instruction was detected and treated as a stack operation\n"
+        " |\n"
+        " |                              +- number of calls\n"
+        " |                              |\n"
+        " |                              |    +- percentage of calls in relation to all\n"
+        " |                              |    |  function calls\n"
+        " |                              |    |\n"
+        "total                          390  100%\n"
+        "clear                           66   17%\n"
+        "weak (unknown stack impact)      6    2%\n"
+        "skipped                        318   82%\n"
+        "  potential stack instructions   0    0%\n"
+        "  unexpected stack impact      318   82%\n"
     )
 
 

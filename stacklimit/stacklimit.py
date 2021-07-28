@@ -1012,7 +1012,7 @@ class Stacklimit:
             Statistic("weak (unknown stack impact)", weak, weak_percent),
             Statistic("skipped", skipped, skipped_percent),
             Statistic(
-                "  potential stack operations",
+                "  potential stack instructions",
                 skipped_potential,
                 skipped_potential_percent,
             ),
@@ -1029,38 +1029,6 @@ class Stacklimit:
 
         count_len = int(log(count_len, 10).real + 1)
         percent_len = 4
-
-        # TODO: Print an explanation of the values
-        # * count                             The number of instructions
-        # * percent                           The percentage relative to total
-        #                                     (count / total)
-        #
-        # * total                             The number of all instructions
-        # * clear                             The number of instructions which are used
-        #                                     to calculate the stack size.
-        #                                     Note: Only specific operations on the
-        #                                     stack will be counted here, while other
-        #                                     stack operations will be ignored.
-        #                                     E.g. only those operations which decrease
-        #                                     the stack are counted while operations
-        #                                     which increase it are ignored and will be
-        #                                     counted to "skipped".
-        #                                     (see also "potential stack operations")
-        # * weak                              The number of instructions which
-        #                                     manipulates the stack, but it's unclear
-        #                                     how many bytes they will increase the
-        #                                     stack.
-        # * skipped                           The complement of parsed.
-        #                                     (= total - clear - weak)
-        #   * potential stack operations      Some instructions might listed here which
-        #                                     are already covered by tracking the
-        #                                     counter part like
-        #                                     * pop and push
-        #                                     * add and sub
-        #                                     * add x... and add -x...
-        #                                     or are recovered by using another
-        #                                     opeartion like mov
-        #   * unexpected stack impact
 
         if show_header:
             self._print(
