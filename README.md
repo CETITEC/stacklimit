@@ -10,6 +10,8 @@ respective sub-function. After that the tool calculates the stack size for each
 function including the stack size of the sub-function with the biggest stack
 size.
 
+stacklimit was highly influenced by the Perl script [checkstack.pl](https://github.com/torvalds/linux/blob/28596c9722289b2f98fa83a2e4351eb0a031b953/scripts/checkstack.pl) of the [Linux kernel](https://www.kernel.org).
+
 
 *Note*: You can disable the color mode to parse the output for scripts. There
 are also exit codes for each Warning and Error type.
