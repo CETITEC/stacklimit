@@ -1,4 +1,3 @@
-#!/bin/python3
 """The data structure for analyzing and calculating the stack size of each function."""
 
 MAX_NAME_LEN = 64

@@ -1,4 +1,3 @@
-#!/bin/python3
 """Patterns for the ARM 64bit (aka AArch64) architecture."""
 
 from .arm import arm

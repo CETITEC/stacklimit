@@ -1,4 +1,3 @@
-#!/bin/python3
 """The base class to implement patterns for a specific architecture."""
 
 import re

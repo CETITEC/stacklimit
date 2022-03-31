@@ -1,4 +1,3 @@
-#!/bin/python3
 """Patterns for the x86 32bit and 64bit architecture."""
 
 import re

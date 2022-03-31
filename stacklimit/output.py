@@ -1,4 +1,3 @@
-#!/bin/python3
 """Collection of output utilities."""
 
 

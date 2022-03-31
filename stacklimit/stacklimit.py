@@ -1,4 +1,3 @@
-#!/bin/python3
 """Determine the maximum stack size of a binary program using the ELF format."""
 
 

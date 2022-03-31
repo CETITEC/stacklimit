@@ -1,4 +1,3 @@
-#!/bin/python3
 """Patterns for the ARM 32bit (aka AArch 32) and 64bit (aka AArch64) architecture."""
 
 from .base import Pattern
