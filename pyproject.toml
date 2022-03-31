@@ -5,6 +5,7 @@ description = "Determines the maximum stack size of a binary program using the E
 authors = ["Moritz Luedecke <moritz.luedecke@cetitec.com>"]
 license = ""
 readme = "README.md"
+repository = "https://github.com/CETITEC/stacklimit"
 keywords = ["stack", "limit", "elf", "object", "binaries", "static", "analysis", "CETITEC"]
 
 classifiers = [
