@@ -1,4 +1,9 @@
 #!/bin/python3
+
+# SPDX-FileCopyrightText: 2022 CETITEC GmbH <https://www.cetitec.com>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 """The entrance point when executing the tool from a shell."""
 
 import argparse

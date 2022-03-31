@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 CETITEC GmbH <https://www.cetitec.com>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 """The data structure for analyzing and calculating the stack size of each function."""
 
 MAX_NAME_LEN = 64

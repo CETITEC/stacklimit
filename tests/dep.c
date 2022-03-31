@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 CETITEC GmbH <https://www.cetitec.com>
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #include <stdint.h>
 
 int64_t __attribute__ ((noinline)) func_omega2(void) {

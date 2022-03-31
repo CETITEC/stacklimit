@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: 2022 CETITEC GmbH <https://www.cetitec.com>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # Validate the stacklimit tool with "gcc -fstack-usage" with the architecture
 # of the host machine
 

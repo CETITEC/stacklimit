@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 CETITEC GmbH <https://www.cetitec.com>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 """Patterns for the x86 32bit and 64bit architecture."""
 
 import re

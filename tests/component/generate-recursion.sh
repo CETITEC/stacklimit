@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: 2022 CETITEC GmbH <https://www.cetitec.com>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # This component test shall test if the result calculated by stacklimit will
 # increase with the same multiple than the called nested functions.
 

@@ -108,3 +108,11 @@ poetry run tests/component/misc.sh
 poetry run tests/component/none_sense.sh
 poetry run tests/component/recursion.sh
 ```
+
+LICENSE
+-------
+
+Copyright (C) 2022 CETITEC GmbH.
+
+Free use of this software is granted under the terms of the GNU General
+Public License version 2 (GPLv2).
