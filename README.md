@@ -1,20 +1,22 @@
 stacklimit
 ==========
 
-Determines the maximum stack size of a binary program using the ELF format.
+A static analyzer, which determines the maximum stack size of an executable or
+library using the ELF format.
 
-The logic is very simple. This tool just parse the assembler code and notes all
-subtraction operations on the stack. Additionally it builds an function call
-graph based on the knowledge of the assembler code which function is calling the
-respective sub-function. After that the tool calculates the stack size for each
-function including the stack size of the sub-function with the biggest stack
-size.
+stacklimit is a standalone python script, which parses the object file of the
+provided binary by using objdump. During parsing it stacklimit will create a
+call graph with the changed stack size per function. The changed stack size is
+determined via operations which can decrease the stack pointer and therefore may
+increase the used stack.
+
+After that stacklimit will calculate the total stack size by traveling through
+the call graph and summarize the stack size of each function including the
+sub-function, which increases the stack the most.
 
 stacklimit was highly influenced by the Perl script [checkstack.pl](https://github.com/torvalds/linux/blob/28596c9722289b2f98fa83a2e4351eb0a031b953/scripts/checkstack.pl) of the [Linux kernel](https://www.kernel.org).
 
 
-*Note*: You can disable the color mode to parse the output for scripts. There
-are also exit codes for each Warning and Error type.
 
 
 Features
@@ -23,7 +25,7 @@ Features
 * Function call tree
 * Detection of recursive function calls (cycles)
 * Detection of dynamic stack operations
-* Detection of function pointers
+* Detection of indirect calls (function pointers)
 
 
 Supported Architectures
@@ -35,7 +37,7 @@ Supported Architectures
 * `x86_64`
 
 
-Requirements
+Dependencies
 ------------
 
 * **objdump** (gcc)
