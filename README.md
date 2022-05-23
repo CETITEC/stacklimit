@@ -17,6 +17,42 @@ sub-function, which increases the stack the most.
 stacklimit was highly influenced by the Perl script [checkstack.pl](https://github.com/torvalds/linux/blob/28596c9722289b2f98fa83a2e4351eb0a031b953/scripts/checkstack.pl) of the [Linux kernel](https://www.kernel.org).
 
 
+Example
+-------
+
+To analyze the compilation of `test/dep.c`, just execute stacklimit with the
+path to the binary:
+```
+$ stacklimit tests/dep-x86_64
+Warning: Found cycle in call graph entering with 'rec_xi'
+Warning: Found cycle in call graph entering with 'rec_psi'
+Warning: Function 'main' calls a function pointer
+
+0x4007a5 main                   dep-x86_64  80 >480
+0x40066d func_epsilon           dep-x86_64  96  400
+0x4005e9 func_delta             dep-x86_64  80  304
+0x40058b func_gamma             dep-x86_64  64  224
+0x400556 func_beta              dep-x86_64  48  160
+0x40051a func_alpha             dep-x86_64  40  112
+0x400787 rec_psi                dep-x86_64  32  >96
+0x4004f0 func_alpha2            dep-x86_64  40   72
+0x400769 rec_chi                dep-x86_64  32  >64
+0x4004ce func_alpha3            dep-x86_64  24   32
+0x400718 rec_xi                 dep-x86_64  32  >32
+0x40073e rec_phi                dep-x86_64  32  >32
+0x4004b1 func_omega             dep-x86_64  16   24
+0x4004a6 func_omega2            dep-x86_64   8    8
+0x4004bc func_alpha4            dep-x86_64   8    8
+
+total                          392  100%
+clear                           67   17%
+weak (unknown stack impact)      5    1%
+skipped                        320   82%
+  potential stack instructions   0    0%
+  unexpected stack impact      320   82%
+```
+
+For further information execute stacklimit with `--help` or `--documentation`.
 
 
 Features
